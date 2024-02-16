@@ -396,8 +396,8 @@ function displayPlayers() {
       playerBuffer.push();
       if(debug) {
         playerBuffer.fill(0, 255, 0, 100);
-        playerBuffer.ellipse(playerData.state.position.x, playerData.state.position.y, 230, 230);
-        playerBuffer.translate((playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)) - (gameData.players[permanentID].state.previousPosition.x + gameData.players[permanentID].state.force.x * (tickDelay / gameData.lastTickDelay)) + playerBuffer.width / 2, playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay) - (gameData.players[permanentID].state.previousPosition.y + gameData.players[permanentID].state.force.y * (tickDelay / gameData.lastTickDelay)) + playerBuffer.height / 2);
+        playerBuffer.ellipse(playerData.state.position.x - (gameData.players[permanentID].state.previousPosition.x + gameData.players[permanentID].state.force.x * (tickDelay / gameData.lastTickDelay)) + playerBuffer.width / 2, playerData.state.position.y - (gameData.players[permanentID].state.previousPosition.y + gameData.players[permanentID].state.force.y * (tickDelay / gameData.lastTickDelay)) + playerBuffer.height / 2, 230, 230);      
+        playerBuffer.translate((playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)) - (gameData.players[permanentID].state.previousPosition.x + gameData.players[permanentID].state.force.x * (tickDelay / gameData.lastTickDelay)) + playerBuffer.width / 2, playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay) - (gameData.players[permanentID].state.previousPosition.y + gameData.players[permanentID].state.force.y * (tickDelay / gameData.lastTickDelay)) + playerBuffer.height / 2);  
         if(!!playerData.state.force.y) {
           playerBuffer.rotate(180);
           playerBuffer.image(assetsLoaded["/assets/misc/arrow.svg"], 0, 0, 30, playerData.state.force.y * 7);

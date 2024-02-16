@@ -234,30 +234,31 @@ function displayParticles() {
   for(let i = 0; i < gameData.particles.length; i++) { 
     const particleData = gameData.particles[i],
     opacity = Math.round(255 - (Date.now() - particleData.timeStamp) / 2) + 1;
+    let tickDelay = syncedMS;
     if(opacity <= -1) {
       gameData.particles.splice(i, 1);
       i--;
     } else {
-      push();
-      translate(particleData.position.x + Math.cos(particleData.angle) * ((sqrt(Date.now() - particleData.timeStamp - gameData.lastTickDelay) * 15) - 44), particleData.position.y + Math.sin(particleData.angle) * ((sqrt(Date.now() - particleData.timeStamp - gameData.lastTickDelay) * 15) - 44));
-      rotate(particleData.rotation / Math.PI * 180 + (Date.now() - particleData.timeStamp) / 10);
-      tint(255, 255, 255, opacity);
+      playerBuffer.push();
+      playerBuffer.translate(particleData.position.x + Math.cos(particleData.angle) * ((sqrt(Date.now() - particleData.timeStamp - gameData.lastTickDelay) * 15) - 44) - (gameData.players[permanentID].state.previousPosition.x + gameData.players[permanentID].state.force.x * (tickDelay / gameData.lastTickDelay)) + playerBuffer.width / 2, particleData.position.y + Math.sin(particleData.angle) * ((sqrt(Date.now() - particleData.timeStamp - gameData.lastTickDelay) * 15) - 44) - (gameData.players[permanentID].state.previousPosition.y + gameData.players[permanentID].state.force.y * (tickDelay / gameData.lastTickDelay)) + playerBuffer.height / 2);
+      playerBuffer.rotate(particleData.rotation / Math.PI * 180 + (Date.now() - particleData.timeStamp) / 10);
+      playerBuffer.tint(255, 255, 255, opacity);
       if(particleData.colour != "none") {
-        fill(particleData.colour + hex(opacity)[6] + (hex(opacity)[7]));
+        playerBuffer.fill(particleData.colour + hex(opacity)[6] + (hex(opacity)[7]));
         if(particleData.colour == "blue" || particleData.colour === "red") {
-          fill("#e9494f" + hex(opacity)[6] + (hex(opacity)[7]));
+          playerBuffer.fill("#e9494f" + hex(opacity)[6] + (hex(opacity)[7]));
           if(particleData.colour == gameData.players[permanentID].team) {
-            fill("#498fe9" + hex(opacity)[6] + (hex(opacity)[7]));
+            playerBuffer.fill("#498fe9" + hex(opacity)[6] + (hex(opacity)[7]));
           }
         }
-        ellipse(0, 0, particleData.size * 0.3125, particleData.size * 0.3125);
+        playerBuffer.ellipse(0, 0, particleData.size * 0.3125, particleData.size * 0.3125);
       }
-      image(assetsLoaded[particleData.src], 0, 0, particleData.size, particleData.size);
+      playerBuffer.image(assetsLoaded[particleData.src], 0, 0, particleData.size, particleData.size);
       if(debug) {
-        fill(255, 150, 0, 100);
-        rect(0, 0, particleData.size, particleData.size);
+        playerBuffer.fill(255, 150, 0, 100);
+        playerBuffer.rect(0, 0, particleData.size, particleData.size);
       }
-      pop();
+      playerBuffer.pop();
     }
   }
 }
@@ -342,33 +343,33 @@ function displayBullets() {
       gameData.bullets.splice(i, 1);
       i--;
     } else {
-      push();
-      imageMode(CORNER);
-      translate(bullet.coordinates.start.x, bullet.coordinates.start.y);
+      playerBuffer.push();
+      playerBuffer.imageMode(CORNER);
+      playerBuffer.translate(bullet.coordinates.start.x - (gameData.players[permanentID].state.previousPosition.x + gameData.players[permanentID].state.force.x * (tickDelay / gameData.lastTickDelay)) + playerBuffer.width / 2, bullet.coordinates.start.y - (gameData.players[permanentID].state.previousPosition.y + gameData.players[permanentID].state.force.y * (tickDelay / gameData.lastTickDelay)) + playerBuffer.height / 2);
       if (bullet.emitter == gameData.players[permanentID].team) {
-        tint(40, 150, 255, (bullet.timeLeft / 25) * opacity);
+        playerBuffer.tint(40, 150, 255, (bullet.timeLeft / 25) * opacity);
       } else {
-        tint(230, 40, 40, (bullet.timeLeft / 25) * opacity);
+        playerBuffer.tint(230, 40, 40, (bullet.timeLeft / 25) * opacity);
       }
-      rotate(bullet.angle - 90);
+      playerBuffer.rotate(bullet.angle - 90);
       if(lengthMultiplier * bullet.tracerLength > 2000) {
-        image(assetsLoaded["/assets/weapons/tracer-start.svg"], -12.5, (lengthMultiplier * bullet.tracerLength - 2000) - (lengthMultiplier * bullet.tracerLength), 25, 2000);
-        image(assetsLoaded["/assets/weapons/tracer-end.svg"], -12.5, -(lengthMultiplier * bullet.tracerLength + 15), 25, (lengthMultiplier * bullet.tracerLength - 1985));
+        playerBuffer.image(assetsLoaded["/assets/weapons/tracer-start.svg"], -12.5, (lengthMultiplier * bullet.tracerLength - 2000) - (lengthMultiplier * bullet.tracerLength), 25, 2000);
+        playerBuffer.image(assetsLoaded["/assets/weapons/tracer-end.svg"], -12.5, -(lengthMultiplier * bullet.tracerLength + 15), 25, (lengthMultiplier * bullet.tracerLength - 1985));
       } else {
-        image(assetsLoaded["/assets/weapons/tracer-start.svg"], -12.5, -(lengthMultiplier * bullet.tracerLength), 25, (lengthMultiplier * bullet.tracerLength + 15));
+        playerBuffer.image(assetsLoaded["/assets/weapons/tracer-start.svg"], -12.5, -(lengthMultiplier * bullet.tracerLength), 25, (lengthMultiplier * bullet.tracerLength + 15));
       }
-      imageMode(CENTER);
+      playerBuffer.imageMode(CENTER);
       //tint(255, 255, 255, ((bullet.timeLeft / 25) * opacity) + 100);
       //image(assetsLoaded["/assets/weapons/bullet.svg"], 0, -(lengthMultiplier * bullet.tracerLength) - 20, 100, 100);
       if(debug) {
-        fill(255, 255, 0, 200);
-        rectMode(CORNER);
-        rect(-12.5, 0, 25, -dist(bullet.coordinates.start.x, bullet.coordinates.start.y, bullet.coordinates.finish.x, bullet.coordinates.finish.y));
-        fill(255, 0, 0, 255);
-        rect(-0.5, 0, 1, -dist(bullet.coordinates.start.x, bullet.coordinates.start.y, bullet.coordinates.finish.x, bullet.coordinates.finish.y));
-        rectMode(CENTER);
+        playerBuffer.fill(255, 255, 0, 200);
+        playerBuffer.rectMode(CORNER);
+        playerBuffer.rect(-12.5, 0, 25, -dist(bullet.coordinates.start.x, bullet.coordinates.start.y, bullet.coordinates.finish.x, bullet.coordinates.finish.y));
+        playerBuffer.fill(255, 0, 0, 255);
+        playerBuffer.rect(-0.5, 0, 1, -dist(bullet.coordinates.start.x, bullet.coordinates.start.y, bullet.coordinates.finish.x, bullet.coordinates.finish.y));
+        playerBuffer.rectMode(CENTER);
       }
-      pop();
+      playerBuffer.pop();
     }
   }
 }
@@ -392,21 +393,21 @@ function displayPlayers() {
       playerBuffer.ellipse(0, 0, 230, 230);
       playerBuffer.image(assetsLoaded["/assets/player/player-base.svg"], 0, 0, 250, 250);
       playerBuffer.pop();
-      push();
+      playerBuffer.push();
       if(debug) {
-        fill(0, 255, 0, 100);
-        ellipse(playerData.state.position.x, playerData.state.position.y, 230, 230);
-        translate((playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay));
+        playerBuffer.fill(0, 255, 0, 100);
+        playerBuffer.ellipse(playerData.state.position.x, playerData.state.position.y, 230, 230);
+        playerBuffer.translate((playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)) - (gameData.players[permanentID].state.previousPosition.x + gameData.players[permanentID].state.force.x * (tickDelay / gameData.lastTickDelay)) + playerBuffer.width / 2, playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay) - (gameData.players[permanentID].state.previousPosition.y + gameData.players[permanentID].state.force.y * (tickDelay / gameData.lastTickDelay)) + playerBuffer.height / 2);
         if(!!playerData.state.force.y) {
-          rotate(180);
-          image(assetsLoaded["/assets/misc/arrow.svg"], 0, 0, 30, playerData.state.force.y * 7);
+          playerBuffer.rotate(180);
+          playerBuffer.image(assetsLoaded["/assets/misc/arrow.svg"], 0, 0, 30, playerData.state.force.y * 7);
         }
         if(!!playerData.state.force.x) {
-          rotate(-90);
-          image(assetsLoaded["/assets/misc/arrow.svg"], 0, 0, 30, playerData.state.force.x * 7);          
+          playerBuffer.rotate(-90);
+          playerBuffer.image(assetsLoaded["/assets/misc/arrow.svg"], 0, 0, 30, playerData.state.force.x * 7);          
         }
       }
-      pop();
+      playerBuffer.pop();
     }
   }
 }

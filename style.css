@@ -1,0 +1,225 @@
+body {
+  overflow: hidden;
+  margin: 0px;
+  background-image: url("/assets/backgrounds/dm_dunes.svg");
+  background-position: center;
+  background-size: 150%;
+  background-repeat: no-repeat;
+  background-color: #caa975;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+canvas {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  cursor: url("/assets/misc/crosshair.png") 32 32, auto;
+}
+
+.main-menu-title {
+  width: 100%;
+}
+
+p {
+  color: rgb(240, 240, 240);
+  font-family: "bebas";
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 0px;
+  margin-bottom: 0px;
+  display: block;
+  align-items: center;
+  text-align: center;
+  transform: skew(calc(-14deg));
+}
+
+button {
+  display: block;
+  background-color: #498ee967;
+  width: calc(12vw + 12vh);
+  height: calc(2.5vw + 2.5vh);
+  margin-top: calc(1.5vw + 1.5vh);
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 0px;
+  text-align: center;
+  padding: 0px;
+  font-family: "source-sans-pro";
+  color: rgb(240, 240, 240);
+  font-size: calc(1.5vw + 1.5vh);
+  border: none;
+  padding-top: 0px;
+  cursor: pointer;
+  transition: linear 0.1s;
+  user-select: none;
+  outline: 0px #333333;
+}
+
+input {
+  display: block;
+  background-color: #498ee967;
+  width: calc(12vw + 12vh);
+  height: calc(2.5vw + 2.5vh);
+  margin-top: calc(1.5vw + 1.5vh);
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 0px;
+  text-align: center;
+  padding: 0px;
+  font-family: "source-sans-pro";
+  color: rgb(240, 240, 240);
+  font-size: calc(1.5vw + 1.5vh);
+  border: none;
+  padding-top: 0px;
+  cursor: text;
+  transition: linear 0.1s;
+  outline: 0px #333333;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:focus {
+  transition: background-color 600000s 0s, color 600000s 0s;
+}
+input[data-autocompleted] {
+  background-color: transparent !important;
+}
+
+input::placeholder {
+  color: rgb(240, 240, 240);
+  opacity: 60%;
+}
+
+.gun-backing {
+  position: absolute;
+  bottom: calc(1vw + 1vh);
+  right: calc(-3vw - 3vh);
+  width: calc(10vw + 10vh);
+  height: calc(3.5vw + 3.5vh);
+  background-color: #498ee967;
+  transform: skew(-14deg);
+  z-index: 1;
+  transition: linear 0.1s;
+}
+
+.ammocount-backing {
+  background-color: #498ee9b6;
+  position: absolute;
+  width: calc(7.5vw + 7.5vh);
+  height: calc(2vw + 2vh);
+  right: calc(-2vw - 2vh);
+  transform: skew(-14deg);
+  z-index: 1;
+}
+
+.gun {
+  position: absolute;
+  height: calc(3.5vw + 3.5vh);
+  left: calc(1vw + 1vh);
+  transform: skew(14deg) scaleX(1);
+  -webkit-user-drag: none;
+  filter: opacity(0.01) drop-shadow(0 0 0 #333333) drop-shadow(0 0 0 #333333) drop-shadow(0 0 0 #333333) drop-shadow(0 0 0 #333333) drop-shadow(0 0 0 #333333) drop-shadow(0 0 0 #333333);
+  filter: none;
+  transition: linear 0.1s;
+}
+
+.individual-score-container {
+  position: absolute;
+  top: calc(1vw + 1vh);
+  width: calc(4vw + 4vh);
+  height: calc(2.5vw + 2.5vh);
+  transform: skew(-14deg);
+  z-index: 1;
+}
+
+.select-weapon {
+  background-color: #498ee9b6;
+  height: calc(2.66vw + 8vh);
+  width: calc(6vw + 18vh);
+  left: calc(2vw + 2vh);
+  z-index: 1;
+  transform: skew(-14deg);
+  cursor: pointer;
+  transition: linear 0.1s;
+  position: relative;
+}
+
+.weapon-select-gun-img {
+  height: 100%;
+  top: auto;
+  bottom: auto;
+  margin-left: auto;
+  margin-right: auto;
+  transform: skew(14deg);
+  -webkit-user-drag: none;
+  display: block;
+  align-items: center;
+  position: auto;
+}
+
+.weapon-select-gun-text {
+  transform: skew(14deg);
+  font-family: "source-sans-pro";
+  color: #333333;
+  font-size: 1vw;
+}
+
+smol {
+  font-size: calc(0.8vw + 0.8vh);
+}
+
+reallysmol {
+  font-size: calc(0.5vw + 0.5vh);
+}
+
+lightishblue {
+  color: #498ee9;
+}
+
+lightishred {
+  color: #e63128e9;
+}
+
+.resize-animation-stopper * {
+  animation: none !important;
+  transition: none !important;
+}
+
+@keyframes float {
+	0% {
+		transform: translatey(0px);
+	}
+	50% {
+		transform: translatey(calc(-0.2vw - 0.6vh));
+	}
+	100% {
+		transform: translatey(0px);
+	}
+}
+
+::-webkit-scrollbar {
+  width: calc(0.7vw + 0.7vh);
+}
+
+::-webkit-scrollbar-track {
+  background: rgb(0, 0, 0, 0);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #498ee967;
+}
+
+@font-face {
+  font-family: "prime";
+  src: url("fonts/Prime-Regular.ttf");
+}
+
+@font-face {
+  font-family: "source-sans-pro";
+  src: url("fonts/SourceSansPro-Black.ttf");
+}
+
+@font-face {
+  font-family: "bebas";
+  src: url("fonts/BebasNeue-Regular.ttf");
+}

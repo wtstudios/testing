@@ -204,8 +204,8 @@ function setupGame() {
     gameData = data;
     playerBuffer = createGraphics(7300, 4000);
     shadowBuffer = createGraphics(7300, 4000);
-    shadowBuffer.pixelDensity(0.15);
-    playerBuffer.pixelDensity(0.4);
+    shadowBuffer.pixelDensity(0.05);
+    playerBuffer.pixelDensity(0.3);
     shadowBuffer.imageMode(CENTER);
     shadowBuffer.rectMode(CENTER);
     shadowBuffer.angleMode(DEGREES);

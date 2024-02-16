@@ -864,7 +864,7 @@ function displayWorld() {
     displayPlayers(); 
     displayFog();
     image(playerBuffer, (gameData.players[permanentID].state.previousPosition.x + gameData.players[permanentID].state.force.x * (syncedMS / gameData.lastTickDelay)), (gameData.players[permanentID].state.previousPosition.y + gameData.players[permanentID].state.force.y * (syncedMS / gameData.lastTickDelay)), playerBuffer.width, playerBuffer.height);
-    tint("#26003925");
+    tint("#33333325");
     image(shadowBuffer, (gameData.players[permanentID].state.previousPosition.x + gameData.players[permanentID].state.force.x * (syncedMS / gameData.lastTickDelay)), (gameData.players[permanentID].state.previousPosition.y + gameData.players[permanentID].state.force.y * (syncedMS / gameData.lastTickDelay)), shadowBuffer.width, shadowBuffer.height);
     tint("#ffffff");    
     displayObstacles();

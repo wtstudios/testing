@@ -427,6 +427,11 @@ function displayFog() {
   tickDelay = syncedMS;
   shadowBuffer.noStroke();
   playerBuffer.noStroke();
+  shadowBuffer.push();
+  shadowBuffer.translate((playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)) - (gameData.players[permanentID].state.previousPosition.x + gameData.players[permanentID].state.force.x * (tickDelay / gameData.lastTickDelay)) + playerBuffer.width / 2, playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay) - (gameData.players[permanentID].state.previousPosition.y + gameData.players[permanentID].state.force.y * (tickDelay / gameData.lastTickDelay)) + playerBuffer.height / 2);
+  shadowBuffer.rotate(playerData.state.angle - 90);
+  shadowBuffer.image(assetsLoaded["/assets/misc/vision-cone.svg"], 0, 0, 7000, 7000);
+  shadowBuffer.pop();
   for(let i = 0; i < playerData.state.objectRenderList.length; i++) {
     const obstacleData = gameData.mapData.obstacles[playerData.state.objectRenderList[i]],
     playerObjectAngle = -atan2(obstacleData["body-data"].position.x - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), obstacleData["body-data"].position.y - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) + 90;

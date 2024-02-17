@@ -182,6 +182,7 @@ function setupGame() {
   assetsLoaded["/assets/misc/particle.svg"] = loadImage("/assets/misc/particle.svg");
   assetsLoaded["/assets/weapons/bullet.svg"] = loadImage("assets/weapons/bullet.svg");
   assetsLoaded["/assets/misc/smokeparticle.svg"] = loadImage("/assets/misc/smokeparticle.svg");
+  assetsLoaded["/assets/misc/vision-cone.svg"] = loadImage("/assets/misc/vision-cone.svg");
   assetsLoaded["/assets/weapons/cartridge.svg"] = loadImage("/assets/weapons/cartridge.svg");
   assetsLoaded["/assets/environment/point-outline.svg"] = loadImage("/assets/environment/point-outline.svg");
   assetsLoaded["/assets/misc/arrow.svg"] = loadImage("/assets/misc/arrow.svg");

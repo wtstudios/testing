@@ -23,11 +23,11 @@
      inkscape:pagecheckerboard="0"
      inkscape:document-units="mm"
      showgrid="false"
-     inkscape:zoom="0.35688499"
-     inkscape:cx="361.46098"
-     inkscape:cy="304.01951"
+     inkscape:zoom="0.078606601"
+     inkscape:cx="1946.4014"
+     inkscape:cy="-686.96521"
      inkscape:window-width="1312"
-     inkscape:window-height="722"
+     inkscape:window-height="431"
      inkscape:window-x="0"
      inkscape:window-y="25"
      inkscape:window-maximized="0"
@@ -35,7 +35,20 @@
      inkscape:showpageshadow="2"
      inkscape:deskcolor="#d1d1d1" />
   <defs
-     id="defs30177" />
+     id="defs30177">
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath2010">
+      <rect
+         style="fill:#dabb7f;stroke:#333333;stroke-width:0;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:188.976"
+         id="rect2012"
+         width="50"
+         height="20.158905"
+         x="87"
+         y="18.226004"
+         rx="0" />
+    </clipPath>
+  </defs>
   <g
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"

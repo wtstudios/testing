@@ -27,16 +27,20 @@ function requestConnectToGame() {
   socket.emit("play-request", {platform: platform, /*timestamp: JSON.parse(serverWeightMeasure).ip, */nickname: document.getElementById("nickname-input").value});
 
   document.getElementById("select-breach").addEventListener("click", function() {changeGun("breach");});
+  document.getElementById("select-recon").addEventListener("click", function() {changeGun("recon");});
   document.getElementById("select-assault").addEventListener("click", function() {changeGun("assault");});
   document.getElementById("select-scout").addEventListener("click", function() {changeGun("scout");});
+  document.getElementById("select-sniper").addEventListener("click", function() {changeGun("sniper");});
 
-  document.getElementById("respawn-button").addEventListener("click", function() {requestSpawn();});
+  document.getElementById("respawn-button").addEventListener("click", function() {requestSpawn(); loop();});
 }
 
 function changeGun(gun) {
   document.getElementById("select-breach").style.backgroundColor = "#498ee967";
+  document.getElementById("select-recon").style.backgroundColor = "#498ee967";
   document.getElementById("select-assault").style.backgroundColor = "#498ee967";
   document.getElementById("select-scout").style.backgroundColor = "#498ee967";
+  document.getElementById("select-sniper").style.backgroundColor = "#498ee967";
 
   document.getElementById("select-" + gun + "").style.backgroundColor = "#498ee9b6";
 
@@ -192,6 +196,7 @@ function updateHUD(data) {
     document.getElementById("weapon-selection").style.display = "none";
   }
   if(data.secondsLeft < 1) {
+    noLoop();
     document.getElementById("gun-hud").style.display = "none";
     document.getElementById("blue-score-container").style.display = "none";
     document.getElementById("time-left-container").style.display = "none";
@@ -232,15 +237,18 @@ function updateHUD(data) {
 
 function displayParticles() {
   for(let i = 0; i < gameData.particles.length; i++) { 
-    const particleData = gameData.particles[i],
-    opacity = Math.round(255 - (Date.now() - particleData.timeStamp) / 2) + 1;
+    const particleData = gameData.particles[i];
+    let opacity = Math.round(255 - (Date.now() - particleData.timeStamp) / 2) + 1;
     let tickDelay = syncedMS;
     if(opacity <= -1) {
       gameData.particles.splice(i, 1);
       i--;
     } else {
+      if(particleData.timeStamp + 20 > Date.now()) {
+        opacity = 0;
+      }
       playerBuffer.push();
-      playerBuffer.translate(particleData.position.x + Math.cos(particleData.angle) * ((sqrt(Date.now() - particleData.timeStamp - gameData.lastTickDelay) * 15) - 44) - (gameData.players[permanentID].state.previousPosition.x + gameData.players[permanentID].state.force.x * (tickDelay / gameData.lastTickDelay)) + playerBuffer.width / 2, particleData.position.y + Math.sin(particleData.angle) * ((sqrt(Date.now() - particleData.timeStamp - gameData.lastTickDelay) * 15) - 44) - (gameData.players[permanentID].state.previousPosition.y + gameData.players[permanentID].state.force.y * (tickDelay / gameData.lastTickDelay)) + playerBuffer.height / 2);
+      playerBuffer.translate(particleData.position.x + Math.cos(particleData.angle) * ((sqrt(Date.now() - particleData.timeStamp - gameData.lastTickDelay) * 20) - 88) - (gameData.players[permanentID].state.previousPosition.x + gameData.players[permanentID].state.force.x * (tickDelay / gameData.lastTickDelay)) + playerBuffer.width / 2, particleData.position.y + Math.sin(particleData.angle) * ((sqrt(Date.now() - particleData.timeStamp - gameData.lastTickDelay) * 20) - 80) - (gameData.players[permanentID].state.previousPosition.y + gameData.players[permanentID].state.force.y * (tickDelay / gameData.lastTickDelay)) + playerBuffer.height / 2);
       playerBuffer.rotate(particleData.rotation / Math.PI * 180 + (Date.now() - particleData.timeStamp) / 10);
       playerBuffer.tint(255, 255, 255, opacity);
       if(particleData.colour != "none") {
@@ -337,8 +345,8 @@ function displayBullets() {
   for (let i = 0; i < gameData.bullets.length; i++) {
     const bullet = gameData.bullets[i],
     tickDelay = syncedMS,
-    opacity = Math.round(((-(Date.now() - bullet.timeStamp) / 3) + (bullet.timeLeft * 6))),
-    lengthMultiplier = restrict(((Date.now() - bullet.timeStamp) / (gameData.lastTickDelay)), 0, 1);
+    opacity = Math.round(((-(Date.now() - bullet.timeStamp) / 3) + (bullet.timeLeft * 6))) / 2,
+    lengthMultiplier = restrict(((Date.now() - bullet.timeStamp) / (gameData.lastTickDelay)) / 2, 0, 1);
     if(opacity <= 1) {
       gameData.bullets.splice(i, 1);
       i--;
@@ -359,8 +367,9 @@ function displayBullets() {
         playerBuffer.image(assetsLoaded["/assets/weapons/tracer-start.svg"], -12.5, -(lengthMultiplier * bullet.tracerLength), 25, (lengthMultiplier * bullet.tracerLength + 15));
       }
       playerBuffer.imageMode(CENTER);
-      //tint(255, 255, 255, ((bullet.timeLeft / 25) * opacity) + 100);
-      //image(assetsLoaded["/assets/weapons/bullet.svg"], 0, -(lengthMultiplier * bullet.tracerLength) - 20, 100, 100);
+      playerBuffer.tint(255, 255, 255, ((bullet.timeLeft / 25) * opacity) + 100);
+      playerBuffer.image(assetsLoaded["/assets/weapons/bullet.svg"], 0, -(lengthMultiplier * bullet.tracerLength) - 20, 100, 100);
+      playerBuffer.tint(255);
       if(debug) {
         playerBuffer.fill(255, 255, 0, 200);
         playerBuffer.rectMode(CORNER);
@@ -380,15 +389,15 @@ function displayPlayers() {
       const playerData = gameData.players[gameData.users[i]],
       tickDelay = syncedMS;
       playerBuffer.push();
-      playerBuffer.fill("#e9494f");
-      if (playerData.team == gameData.players[permanentID].team) {
-        playerBuffer.fill("#498fe9");
-      }
       playerBuffer.translate((playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)) - (gameData.players[permanentID].state.previousPosition.x + gameData.players[permanentID].state.force.x * (tickDelay / gameData.lastTickDelay)) + playerBuffer.width / 2, playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay) - (gameData.players[permanentID].state.previousPosition.y + gameData.players[permanentID].state.force.y * (tickDelay / gameData.lastTickDelay)) + playerBuffer.height / 2);
       if(gameData.users[i] == permanentID) {
         playerBuffer.rotate(atan2(mouseY - height / 2, mouseX - width / 2) + 90);
       } else {
         playerBuffer.rotate(playerData.state.angle - 90);
+      }
+      playerBuffer.fill("#e9494f");
+      if (playerData.team == gameData.players[permanentID].team) {
+        playerBuffer.fill("#498fe9");
       }
       playerBuffer.ellipse(0, 0, 230, 230);
       playerBuffer.image(assetsLoaded["/assets/player/player-base.svg"], 0, 0, 250, 250);
@@ -400,11 +409,15 @@ function displayPlayers() {
         playerBuffer.translate((playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)) - (gameData.players[permanentID].state.previousPosition.x + gameData.players[permanentID].state.force.x * (tickDelay / gameData.lastTickDelay)) + playerBuffer.width / 2, playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay) - (gameData.players[permanentID].state.previousPosition.y + gameData.players[permanentID].state.force.y * (tickDelay / gameData.lastTickDelay)) + playerBuffer.height / 2);  
         if(!!playerData.state.force.y) {
           playerBuffer.rotate(180);
+          if(playerData.state.force.y < 0) playerBuffer.rotate(180);
           playerBuffer.image(assetsLoaded["/assets/misc/arrow.svg"], 0, 0, 30, playerData.state.force.y * 7);
+          if(playerData.state.force.y < 0) playerBuffer.rotate(-180);
         }
         if(!!playerData.state.force.x) {
           playerBuffer.rotate(-90);
-          playerBuffer.image(assetsLoaded["/assets/misc/arrow.svg"], 0, 0, 30, playerData.state.force.x * 7);          
+          if(playerData.state.force.x < 0) playerBuffer.rotate(180);
+          playerBuffer.image(assetsLoaded["/assets/misc/arrow.svg"], 0, 0, 30, playerData.state.force.x * 7);       
+          if(playerData.state.force.x < 0) playerBuffer.rotate(-180);   
         }
       }
       playerBuffer.pop();
@@ -507,12 +520,12 @@ function displayFog() {
                 break;
                 case "middle": 
                   points.point1 = {
-                    x: 5 + -obstacleData["body-data"].dimensions.width / 2,
-                    y: -5 + obstacleData["body-data"].dimensions.height / 2
+                    x: "inside",
+                    y: "inside"
                   };
                   points.point2 = {
-                    x: -5 + obstacleData["body-data"].dimensions.width / 2,
-                    y: -5 + obstacleData["body-data"].dimensions.height / 2
+                    x: "inside",
+                    y: "inside"
                   };
                 break;
                 case "bottom": 

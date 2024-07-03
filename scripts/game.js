@@ -35,14 +35,14 @@ let socket,
 
 function mousePressed() {
   if(assetsAreLoaded && state.includes("ingame") && mouseButton == LEFT) {
-    keys[950] = true;
+    keys[100] = true;
     socket.emit("move-key-change", {keys: keys});
   }
 }
 
 function mouseReleased() {
   if(assetsAreLoaded && state.includes("ingame") && mouseButton == LEFT) {
-    keys[950] = false;
+    keys[100] = false;
     socket.emit("move-key-change", {keys: keys});
   }
 }
@@ -68,6 +68,7 @@ function mouseWheel(event) {
       socket.emit("change-weapon-index", {index: gameData.players[permanentID].state.activeWeaponIndex - 1});
     }
   }
+  assetsLoaded[gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].sounds.reload].stop();
 }
 
 function keyPressed() {
@@ -143,7 +144,7 @@ function setupGame() {
   createCanvas(windowWidth, windowHeight, WEBGL);
   document.getElementById("defaultCanvas0").style.display = "none";
   background("#333333");
-  pixelDensity(0.8);
+  pixelDensity(0.75);
   noLoop();
   window.addEventListener(
     "resize",
@@ -172,6 +173,7 @@ function setupGame() {
   assetsLoaded["/assets/weapons/tracer-start.svg"] = loadImage("/assets/weapons/tracer-start.svg");
   assetsLoaded["/assets/weapons/tracer-end.svg"] = loadImage("/assets/weapons/tracer-end.svg");
   assetsLoaded["/assets/weapons/scar_topdown.svg"] = loadImage("/assets/weapons/scar_topdown.svg");
+  assetsLoaded["/assets/weapons/mk18_topdown.svg"] = loadImage("/assets/weapons/mk18_topdown.svg");
   assetsLoaded["/assets/weapons/ballista_topdown.svg"] = loadImage("/assets/weapons/ballista_topdown.svg");
   assetsLoaded["/assets/weapons/slp_topdown.svg"] = loadImage("/assets/weapons/slp_topdown.svg");
   assetsLoaded["/assets/weapons/509_topdown.svg"] = loadImage("/assets/weapons/509_topdown.svg");
@@ -190,6 +192,8 @@ function setupGame() {
   assetsLoaded["/assets/audio/guns/ballista_fire.mp3"] = new Howl({ src: ["/assets/audio/guns/ballista_fire.mp3"], volume: 1 });
   assetsLoaded["/assets/audio/guns/slp_fire.mp3"] = new Howl({ src: ["/assets/audio/guns/slp_fire.mp3"], volume: 1 });
   assetsLoaded["/assets/audio/guns/509_fire.mp3"] = new Howl({ src: ["/assets/audio/guns/509_fire.mp3"], volume: 1 });
+  assetsLoaded["/assets/audio/guns/vector_fire.mp3"] = new Howl({ src: ["/assets/audio/guns/vector_fire.mp3"], volume: 1 });
+  assetsLoaded["/assets/audio/guns/mk18_fire.mp3"] = new Howl({ src: ["/assets/audio/guns/mk18_fire.mp3"], volume: 1 });
   assetsLoaded["/assets/audio/guns/deagle_fire.mp3"] = new Howl({ src: ["/assets/audio/guns/deagle_fire.mp3"], volume: 1 });
   assetsLoaded["/assets/audio/guns/fnx_fire.mp3"] = new Howl({ src: ["/assets/audio/guns/fnx_fire.mp3"], volume: 1 });
   assetsLoaded["/assets/audio/guns/melee_fire.mp3"] = new Howl({ src: ["/assets/audio/guns/melee_fire.mp3"], volume: 1 });
@@ -197,16 +201,20 @@ function setupGame() {
   assetsLoaded["/assets/audio/guns/ballista_reload.mp3"] = new Howl({ src: ["/assets/audio/guns/ballista_reload.mp3"], volume: 1 });
   assetsLoaded["/assets/audio/guns/slp_reload.mp3"] = new Howl({ src: ["/assets/audio/guns/slp_reload.mp3"], volume: 1 });
   assetsLoaded["/assets/audio/guns/509_reload.mp3"] = new Howl({ src: ["/assets/audio/guns/509_reload.mp3"], volume: 1 });
+  assetsLoaded["/assets/audio/guns/mk18_reload.mp3"] = new Howl({ src: ["/assets/audio/guns/mk18_reload.mp3"], volume: 1 });
+  assetsLoaded["/assets/audio/guns/vector_reload.mp3"] = new Howl({ src: ["/assets/audio/guns/vector_reload.mp3"], volume: 1 });
+  assetsLoaded["/assets/audio/guns/deagle_reload.mp3"] = new Howl({ src: ["/assets/audio/guns/deagle_reload.mp3"], volume: 1 });
   assetsLoaded["/assets/audio/guns/hit.mp3"] = new Howl({ src: ["/assets/audio/guns/hit.mp3"], volume: 1 });
 
   document.getElementById("play-button").addEventListener("click", function() {requestConnectToGame();});
   
   socket.on("load-world", data => { // first time loading world, right after pressing play
+    console.log("world data recieved");
     gameData = data;
     playerBuffer = createGraphics(7300, 4000);
     shadowBuffer = createGraphics(7300, 4000);
-    shadowBuffer.pixelDensity(0.05);
-    playerBuffer.pixelDensity(0.3);
+    shadowBuffer.pixelDensity(0.025);
+    playerBuffer.pixelDensity(0.25);
     shadowBuffer.imageMode(CENTER);
     shadowBuffer.rectMode(CENTER);
     shadowBuffer.angleMode(DEGREES);
@@ -215,6 +223,7 @@ function setupGame() {
     playerBuffer.angleMode(DEGREES);
     permanentID = socket.id;
     assetsLoaded[data.mapData.config["ground-image"]] = loadImage(data.mapData.config["ground-image"]);
+    document.getElementById("weapon-selection").style["background-image"] = 'url("/assets/backgrounds/' + data.mapData.config['background-src'] + '")';
     for(let i = 0; i < data.mapData.obstacles.length; i++) {
       assetsLoaded[data.mapData.obstacles[i]["display-data"].src] = loadImage(data.mapData.obstacles[i]["display-data"].src);
     }
@@ -229,7 +238,6 @@ function setupGame() {
       targetY: gameData.players[permanentID].state.position.y,
       targetZ: 0
     };
-    loop();
     document.getElementById("main-menu").style.display = "none";
     document.getElementById("hud").style.display = "block";
     document.getElementById("main").src = gameData.weapons[data.players[permanentID].guns[0]].images.lootSRC;
@@ -268,7 +276,7 @@ function setupGame() {
     }
   });
   
-  socket.on("world-update", data => { // LITERALLY EVERY "50" MILLISECOND !!
+  socket.on("world-update", data => { // LITERALLY EVERY "50" MILLISECONDS !!
     gameData.players = data.players,
     gameData.point = data.point,
     gameData.usersOnline = data.usersOnline,
@@ -331,7 +339,7 @@ function setupGame() {
     for(let i = 0; i < gameData.queuedSounds.length; i++) {
       assetsLoaded[gameData.queuedSounds[i].path].volume(0);
       if((0.7 - Math.sqrt(squaredDist(gameData.players[permanentID].state.position, gameData.queuedSounds[i].origin)) / 10000) >= 0) {
-        assetsLoaded[gameData.queuedSounds[i].path].volume(0.7 - (Math.sqrt(squaredDist(gameData.players[permanentID].state.position, gameData.queuedSounds[i].origin)) / 10000));
+        assetsLoaded[gameData.queuedSounds[i].path].volume(0.2 - (Math.sqrt(squaredDist(gameData.players[permanentID].state.position, gameData.queuedSounds[i].origin)) / 14000));
       }
       assetsLoaded[gameData.queuedSounds[i].path].play();
     }

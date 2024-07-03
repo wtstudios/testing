@@ -2,12 +2,12 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   width="100mm"
-   height="100mm"
-   viewBox="0 0 100 100"
+   width="10mm"
+   height="10mm"
+   viewBox="0 0 10 10"
    version="1.1"
    id="svg5"
-   inkscape:version="1.1.1 (c3084ef, 2021-09-22)"
+   inkscape:version="1.3 (0e150ed, 2023-07-21)"
    sodipodi:docname="cartridge.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
@@ -23,15 +23,17 @@
      inkscape:pagecheckerboard="0"
      inkscape:document-units="mm"
      showgrid="false"
-     inkscape:zoom="0.47037037"
-     inkscape:cx="374.17323"
-     inkscape:cy="389.05512"
+     inkscape:zoom="9.3296015"
+     inkscape:cx="36.228771"
+     inkscape:cy="21.276364"
      inkscape:window-width="1312"
      inkscape:window-height="724"
      inkscape:window-x="0"
      inkscape:window-y="25"
      inkscape:window-maximized="0"
-     inkscape:current-layer="layer1" />
+     inkscape:current-layer="layer1"
+     inkscape:showpageshadow="2"
+     inkscape:deskcolor="#d1d1d1" />
   <defs
      id="defs2" />
   <g
@@ -41,10 +43,10 @@
     <rect
        style="fill:#333333;stroke:#959595;stroke-width:0;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:831.496"
        id="rect846"
-       width="30"
-       height="70"
-       x="35"
-       y="15"
-       ry="6.0882359" />
+       width="3.0000021"
+       height="7.0000048"
+       x="3.499999"
+       y="1.4999976"
+       ry="0" />
   </g>
 </svg>

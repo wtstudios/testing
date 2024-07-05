@@ -173,6 +173,7 @@ function setupGame() {
   assetsLoaded["/assets/weapons/tracer-start.svg"] = loadImage("/assets/weapons/tracer-start.svg");
   assetsLoaded["/assets/weapons/tracer-end.svg"] = loadImage("/assets/weapons/tracer-end.svg");
   assetsLoaded["/assets/weapons/scar_topdown.svg"] = loadImage("/assets/weapons/scar_topdown.svg");
+  assetsLoaded["/assets/weapons/vector_topdown.svg"] = loadImage("/assets/weapons/vector_topdown.svg");
   assetsLoaded["/assets/weapons/mk18_topdown.svg"] = loadImage("/assets/weapons/mk18_topdown.svg");
   assetsLoaded["/assets/weapons/ballista_topdown.svg"] = loadImage("/assets/weapons/ballista_topdown.svg");
   assetsLoaded["/assets/weapons/slp_topdown.svg"] = loadImage("/assets/weapons/slp_topdown.svg");
@@ -223,7 +224,7 @@ function setupGame() {
     playerBuffer.angleMode(DEGREES);
     permanentID = socket.id;
     assetsLoaded[data.mapData.config["ground-image"]] = loadImage(data.mapData.config["ground-image"]);
-    document.getElementById("weapon-selection").style["background-image"] = 'url("/assets/backgrounds/' + data.mapData.config['background-src'] + '")';
+    document.getElementById("weapon-selection").style["background-image"] = 'url("/assets/backgrounds/' + gameData.mapData.config['background-src'] + '")';
     for(let i = 0; i < data.mapData.obstacles.length; i++) {
       assetsLoaded[data.mapData.obstacles[i]["display-data"].src] = loadImage(data.mapData.obstacles[i]["display-data"].src);
     }
@@ -257,7 +258,7 @@ function setupGame() {
     document.getElementById("mapname").textContent = "Map: " + gameData.mapData.config["map-name"];
     document.getElementById("fps").textContent = "FPS: " + round(frameRate());
     document.getElementById("pingcount").textContent = "Ping: " + gameData.players[permanentID].state.ping;
-    updateDebugMenu = setInterval(function() { if(debug) { document.getElementById("object-count").textContent = gameData.players[permanentID].state.objectRenderList.length + gameData.bullets.length + gameData.particles.length + gameData.users.length + " objects being rendered"; document.getElementById("fps").textContent = "FPS: " + round(frameRate());     document.getElementById("pingcount").textContent = "Ping: " + gameData.players[permanentID].state.ping; } }, 1000);
+    updateDebugMenu = setInterval(function() { if(debug) { document.getElementById("object-count").textContent = gameData.players[permanentID].state.objectRenderList.length + gameData.bullets.length + gameData.particles.length + gameData.users.length + " objects being rendered"; document.getElementById("fps").textContent = "FPS: " + round(frameRate());     document.getElementById("pingcount").textContent = "Ping: " + gameData.players[permanentID].state.ping; } }, 1500);
     gameData.selectedClass = "assault";
     ping = setInterval(function() {
       const start = Date.now();

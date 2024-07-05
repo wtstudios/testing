@@ -191,6 +191,9 @@ function updateHUD(data) {
   }
   if(data.players[permanentID].health < 1 && data.secondsLeft > 0) {
     document.getElementById("weapon-selection").style.display = "block";
+    if(data.scoreboard[permanentID].deaths > 0) {
+      document.getElementById("weapon-selection").style["background-image"] = 'url("/assets/misc/blank.svg")';
+    }
     document.getElementById("gun-hud").style.display = "none";
   } else if(document.getElementById("weapon-selection").style.display != "none") {
     document.getElementById("weapon-selection").style.display = "none";

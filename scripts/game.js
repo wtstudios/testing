@@ -214,7 +214,7 @@ function setupGame() {
     gameData = data;
     playerBuffer = createGraphics(7300, 4000);
     shadowBuffer = createGraphics(7300, 4000);
-    shadowBuffer.pixelDensity(0.05);
+    shadowBuffer.pixelDensity(0.025);
     playerBuffer.pixelDensity(0.25);
     shadowBuffer.imageMode(CENTER);
     shadowBuffer.rectMode(CENTER);
@@ -225,6 +225,7 @@ function setupGame() {
     permanentID = socket.id;
     assetsLoaded[data.mapData.config["ground-image"]] = loadImage(data.mapData.config["ground-image"]);
     document.getElementById("weapon-selection").style["background-image"] = 'url("/assets/backgrounds/' + gameData.mapData.config['background-src'] + '")';
+    document.getElementById("weapon-selection").style["background-color"] = "#00000000";
     for(let i = 0; i < data.mapData.obstacles.length; i++) {
       assetsLoaded[data.mapData.obstacles[i]["display-data"].src] = loadImage(data.mapData.obstacles[i]["display-data"].src);
     }

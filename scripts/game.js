@@ -1,5 +1,22 @@
 let socket,
   gameData,
+  clientData = {
+    lastShotTimestamps: {},
+    explosionParticleTypes: {},
+    explosionParticles: [],
+    options: {
+      shadowResolution: 0.05,
+      obstacleResolution: 0.75,
+      gameplayResolution: 0.25,
+      volume: 0.8,
+      justTracers: false,
+      bulletInterpSpeed: 900,
+      impactSounds: true,
+      impactParticles: true,
+      shadowColour: "#33333325",
+      detailedGround: true
+    }
+  },
   assetsLoaded = {},
   assetsAreLoaded = false,
   queuedCameraLocation = {
@@ -56,7 +73,7 @@ function keyReleased() {
 
 function mouseWheel(event) {
   if(event.delta > 0) {
-    if(gameData.players[permanentID].state.activeWeaponIndex == 2) {
+    if(gameData.players[permanentID].state.activeWeaponIndex == 3) {
       socket.emit("change-weapon-index", {index: 0});
     } else {
       socket.emit("change-weapon-index", {index: gameData.players[permanentID].state.activeWeaponIndex + 1});
@@ -95,6 +112,13 @@ function keyPressed() {
       socket.emit("change-weapon-index", {index: 2});
       keys[51] = false;
       if(gameData.players[permanentID].state.activeWeaponIndex != 2) {
+        assetsLoaded[gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].sounds.reload].stop();
+      }
+    }
+    if(keys[52]) {
+      socket.emit("change-weapon-index", {index: 3});
+      keys[52] = false;
+      if(gameData.players[permanentID].state.activeWeaponIndex != 3) {
         assetsLoaded[gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].sounds.reload].stop();
       }
     }
@@ -144,7 +168,7 @@ function setupGame() {
   createCanvas(windowWidth, windowHeight, WEBGL);
   document.getElementById("defaultCanvas0").style.display = "none";
   background("#333333");
-  pixelDensity(0.75);
+  pixelDensity(clientData.options.obstacleResolution);
   noLoop();
   window.addEventListener(
     "resize",
@@ -166,7 +190,13 @@ function setupGame() {
   angleMode(DEGREES)
   noStroke();
 
-  sourceSansPro = loadFont("/fonts/SourceSansPro-Black.ttf")
+  sourceSansPro = loadFont("/fonts/SourceSansPro-Black.ttf");
+
+  fetch("/api/explosion-types.json")
+  .then(response => response.json())
+  .then(data => {
+    clientData.explosionParticleTypes = data;
+  });     
 
   assetsLoaded["/assets/player/player-base.svg"] = loadImage("/assets/player/player-base.svg");
   assetsLoaded["/assets/player/player-hand.svg"] = loadImage("/assets/player/player-hand.svg");
@@ -182,6 +212,7 @@ function setupGame() {
   assetsLoaded["/assets/weapons/deagle_topdown.svg"] = loadImage("/assets/weapons/deagle_topdown.svg");
   assetsLoaded["/assets/weapons/knife_topdown.svg"] = loadImage("/assets/weapons/knife_topdown.svg");
   assetsLoaded["/assets/weapons/bayonet_topdown.svg"] = loadImage("/assets/weapons/bayonet_topdown.svg");
+  assetsLoaded["/assets/weapons/m18_topdown.svg"] = loadImage("/assets/weapons/m18_topdown.svg");
   assetsLoaded["/assets/misc/particle.svg"] = loadImage("/assets/misc/particle.svg");
   assetsLoaded["/assets/weapons/bullet.svg"] = loadImage("assets/weapons/bullet.svg");
   assetsLoaded["/assets/misc/smokeparticle.svg"] = loadImage("/assets/misc/smokeparticle.svg");
@@ -189,6 +220,7 @@ function setupGame() {
   assetsLoaded["/assets/weapons/cartridge.svg"] = loadImage("/assets/weapons/cartridge.svg");
   assetsLoaded["/assets/environment/point-outline.svg"] = loadImage("/assets/environment/point-outline.svg");
   assetsLoaded["/assets/misc/arrow.svg"] = loadImage("/assets/misc/arrow.svg");
+  assetsLoaded["/assets/misc/circle.svg"] = loadImage("/assets/misc/circle.svg");
   assetsLoaded["/assets/audio/guns/scar_fire.mp3"] = new Howl({ src: ["/assets/audio/guns/scar_fire.mp3"], volume: 1 });
   assetsLoaded["/assets/audio/guns/ballista_fire.mp3"] = new Howl({ src: ["/assets/audio/guns/ballista_fire.mp3"], volume: 1 });
   assetsLoaded["/assets/audio/guns/slp_fire.mp3"] = new Howl({ src: ["/assets/audio/guns/slp_fire.mp3"], volume: 1 });
@@ -197,7 +229,8 @@ function setupGame() {
   assetsLoaded["/assets/audio/guns/mk18_fire.mp3"] = new Howl({ src: ["/assets/audio/guns/mk18_fire.mp3"], volume: 1 });
   assetsLoaded["/assets/audio/guns/deagle_fire.mp3"] = new Howl({ src: ["/assets/audio/guns/deagle_fire.mp3"], volume: 1 });
   assetsLoaded["/assets/audio/guns/fnx_fire.mp3"] = new Howl({ src: ["/assets/audio/guns/fnx_fire.mp3"], volume: 1 });
-  assetsLoaded["/assets/audio/guns/melee_fire.mp3"] = new Howl({ src: ["/assets/audio/guns/melee_fire.mp3"], volume: 1 });
+  assetsLoaded["/assets/audio/guns/whoosh.mp3"] = new Howl({ src: ["/assets/audio/guns/whoosh.mp3"], volume: 1 });
+  assetsLoaded["/assets/audio/guns/smoke_burst.mp3"] = new Howl({ src: ["/assets/audio/guns/smoke_burst.mp3"], volume: 1 });
   assetsLoaded["/assets/audio/guns/scar_reload.mp3"] = new Howl({ src: ["/assets/audio/guns/scar_reload.mp3"], volume: 1 });
   assetsLoaded["/assets/audio/guns/ballista_reload.mp3"] = new Howl({ src: ["/assets/audio/guns/ballista_reload.mp3"], volume: 1 });
   assetsLoaded["/assets/audio/guns/slp_reload.mp3"] = new Howl({ src: ["/assets/audio/guns/slp_reload.mp3"], volume: 1 });
@@ -205,7 +238,17 @@ function setupGame() {
   assetsLoaded["/assets/audio/guns/mk18_reload.mp3"] = new Howl({ src: ["/assets/audio/guns/mk18_reload.mp3"], volume: 1 });
   assetsLoaded["/assets/audio/guns/vector_reload.mp3"] = new Howl({ src: ["/assets/audio/guns/vector_reload.mp3"], volume: 1 });
   assetsLoaded["/assets/audio/guns/deagle_reload.mp3"] = new Howl({ src: ["/assets/audio/guns/deagle_reload.mp3"], volume: 1 });
-  assetsLoaded["/assets/audio/guns/hit.mp3"] = new Howl({ src: ["/assets/audio/guns/hit.mp3"], volume: 1 });
+  assetsLoaded["/assets/audio/impact/metal.mp3"] = new Howl({ src: ["/assets/audio/impact/metal.mp3"], volume: 1 });  
+  assetsLoaded["/assets/audio/impact/wood.mp3"] = new Howl({ src: ["/assets/audio/impact/wood.mp3"], volume: 1 });
+  assetsLoaded["/assets/audio/impact/stone.mp3"] = new Howl({ src: ["/assets/audio/impact/stone.mp3"], volume: 1 });
+  assetsLoaded["/assets/audio/footsteps/step1.mp3"] = new Howl({ src: ["/assets/audio/footsteps/step1.mp3"], volume: 1 });
+  assetsLoaded["/assets/audio/footsteps/step2.mp3"] = new Howl({ src: ["/assets/audio/footsteps/step2.mp3"], volume: 1 });
+  assetsLoaded["/assets/audio/footsteps/step3.mp3"] = new Howl({ src: ["/assets/audio/footsteps/step3.mp3"], volume: 1 });
+  assetsLoaded["/assets/audio/footsteps/step4.mp3"] = new Howl({ src: ["/assets/audio/footsteps/step4.mp3"], volume: 1 });
+  assetsLoaded["/assets/audio/footsteps/step5.mp3"] = new Howl({ src: ["/assets/audio/footsteps/step5.mp3"], volume: 1 });
+  assetsLoaded["/assets/audio/footsteps/step6.mp3"] = new Howl({ src: ["/assets/audio/footsteps/step6.mp3"], volume: 1 });
+  assetsLoaded["/assets/audio/footsteps/step7.mp3"] = new Howl({ src: ["/assets/audio/footsteps/step7.mp3"], volume: 1 });
+  assetsLoaded["/assets/audio/footsteps/step8.mp3"] = new Howl({ src: ["/assets/audio/footsteps/step8.mp3"], volume: 1 });
 
   document.getElementById("play-button").addEventListener("click", function() {requestConnectToGame();});
   
@@ -214,8 +257,8 @@ function setupGame() {
     gameData = data;
     playerBuffer = createGraphics(7300, 4000);
     shadowBuffer = createGraphics(7300, 4000);
-    shadowBuffer.pixelDensity(0.05);
-    playerBuffer.pixelDensity(0.25);
+    shadowBuffer.pixelDensity(clientData.options.shadowResolution);
+    playerBuffer.pixelDensity(clientData.options.gameplayResolution);
     shadowBuffer.imageMode(CENTER);
     shadowBuffer.rectMode(CENTER);
     shadowBuffer.angleMode(DEGREES);
@@ -229,7 +272,7 @@ function setupGame() {
     for(let i = 0; i < data.mapData.obstacles.length; i++) {
       assetsLoaded[data.mapData.obstacles[i]["display-data"].src] = loadImage(data.mapData.obstacles[i]["display-data"].src);
     }
-    gameData.decals = [];
+
     assetsAreLoaded = true;
     state = "ingame-weaponselect";
     queuedCameraLocation = {
@@ -245,11 +288,9 @@ function setupGame() {
     document.getElementById("main").src = gameData.weapons[data.players[permanentID].guns[0]].images.lootSRC;
     document.getElementById("pistol").src = gameData.weapons[data.players[permanentID].guns[1]].images.lootSRC;
     document.getElementById("melee").src = gameData.weapons[data.players[permanentID].guns[2]].images.lootSRC;
-    if(gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].type == "melee") {
-      document.getElementById("ammocount").innerHTML = '∞';
-    } else {
-      document.getElementById("ammocount").innerHTML = data.players[permanentID].state.mag[data.players[permanentID].state.activeWeaponIndex] + " <smol> I " + data.players[permanentID].guns[data.players[permanentID].state.activeWeaponIndex].magSize + '</smol> <img src="/assets/misc/bullet-icon.svg" style="width: calc(0.2vw + 0.2vh);"></img>';
-    }
+    document.getElementById("grenade").src = gameData.weapons[data.players[permanentID].guns[2]].images.lootSRC;
+    updateGunHUD(data);
+    updateHUD(data);
     document.getElementById("time-left").textContent = gameData.secondsLeft;
     document.getElementById("healthbar").style.width = ((windowWidth * 0.1) * (gameData.players[permanentID].health / 100)) + ((windowHeight * 0.1) * (gameData.players[permanentID].health / 100)) + "px";
     document.getElementById("healthbar-opposite").style.width = ((windowWidth * 0.1) * -((data.players[permanentID].health / 100) - 1)) + ((windowHeight * 0.1) * -((data.players[permanentID].health / 100) - 1)) + "px";
@@ -299,25 +340,38 @@ function setupGame() {
       document.getElementById("end-of-game-nextgame-start-countdown").textContent = "NEXT GAME IN " + (data.secondsLeft + 10) + "...";
     }
     if(data.shouldUpdateScoreboard) updateScoreboard(gameData);
+    const currentTime = Date.now() / 1;
+    for(let i = 0; i < data.grenades.length; i++) {
+      gameData.grenades.push(data.grenades[i]);
+      gameData.grenades[gameData.grenades.length - 1].timeStamp = currentTime;
+      gameData.grenades[gameData.grenades.length - 1].throwLength = Math.ceil(Math.sqrt(gameData.grenades[gameData.grenades.length - 1].throwLength));
+      gameData.grenades[gameData.grenades.length - 1].hasExploded = false;
+      gameData.grenades[gameData.grenades.length - 1].explosionType = gameData.weapons[gameData.players[data.grenades[i].player].guns[gameData.players[data.grenades[i].player].state.activeWeaponIndex]].particleType;
+      gameData.grenades[gameData.grenades.length - 1].timeLeft = 20;    }
     for(let i = 0; i < data.bullets.length; i++) {
       let angle = Math.atan2(data.bullets[i].collisionSurface[0].y - data.bullets[i].collisionSurface[1].y, data.bullets[i].collisionSurface[0].x - data.bullets[i].collisionSurface[1].x) + Math.PI / 2;
       angle = angle + (angle - data.bullets[i].angle * Math.PI / 180);
       gameData.bullets.push(data.bullets[i]);
-      gameData.bullets[gameData.bullets.length - 1].timeStamp = Date.now();
+      gameData.bullets[gameData.bullets.length - 1].timeStamp = currentTime;
       gameData.bullets[gameData.bullets.length - 1].tracerLength = Math.ceil(Math.sqrt(gameData.bullets[gameData.bullets.length - 1].tracerLength));
-      gameData.particles.push(
-        {
-          position: { x: data.bullets[i].coordinates.finish.x, y: data.bullets[i].coordinates.finish.y },
-          rotation: Math.random() * 360,
-          angle: angle,
-          colour: data.bullets[i].collisionSurface[0].colour,
-          opacity: 250,
-          src: '/assets/misc/particle.svg',
-          size: 100,
-          type: 'residue',
-          timeStamp: Date.now()
-        }
-      );
+      gameData.bullets[gameData.bullets.length - 1].hasPlayedSound = false;
+      clientData.lastShotTimestamps[data.bullets[i].player] = Date.now() / 1;
+      if(data.bullets[i].timeLeft > 0 && clientData.options.impactParticles) {
+        gameData.particles.push(
+          {
+            position: { x: data.bullets[i].coordinates.finish.x, y: data.bullets[i].coordinates.finish.y },
+            rotation: Math.random() * 360,
+            angle: angle,
+            colour: data.bullets[i].collisionSurface[0].colour,
+            opacity: 250,
+            src: '/assets/misc/particle.svg',
+            size: 100,
+            tracerLength: data.bullets[i].tracerLength,
+            type: 'residue',
+            timeStamp: currentTime
+          }
+        );
+      } 
       if(data.bullets[i].shouldEjectCartridge) {
         gameData.particles.push(
           {
@@ -329,19 +383,19 @@ function setupGame() {
             src: "/assets/weapons/cartridge.svg",
             size: 100,
             type: "cartridge",
-            timeStamp: Date.now()
+            timeStamp: currentTime
           }
         );
       }
     }
     for(let i = 0; i < data.particles.length; i++) {
       gameData.particles.push(data.particles[i]);
-      gameData.particles[gameData.particles.length - 1].timeStamp = Date.now();
+      gameData.particles[gameData.particles.length - 1].timeStamp = currentTime;
     }
     for(let i = 0; i < gameData.queuedSounds.length; i++) {
       assetsLoaded[gameData.queuedSounds[i].path].volume(0);
-      if((0.7 - Math.sqrt(squaredDist(gameData.players[permanentID].state.position, gameData.queuedSounds[i].origin)) / 10000) >= 0) {
-        assetsLoaded[gameData.queuedSounds[i].path].volume(0.2 - (Math.sqrt(squaredDist(gameData.players[permanentID].state.position, gameData.queuedSounds[i].origin)) / 14000));
+      if((0.35 - Math.sqrt(squaredDist(gameData.players[permanentID].state.position, gameData.queuedSounds[i].origin)) / 15000) >= 0) {
+        assetsLoaded[gameData.queuedSounds[i].path].volume(0.35 - (Math.sqrt(squaredDist(gameData.players[permanentID].state.position, gameData.queuedSounds[i].origin)) / 15000));
       }
       assetsLoaded[gameData.queuedSounds[i].path].play();
     }

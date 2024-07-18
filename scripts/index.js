@@ -334,7 +334,7 @@ function displayObstacles() {
   for (let i = 0; i < player.state.objectRenderList.length; i++) {
     const obstacleData = gameData.mapData.obstacles[player.state.objectRenderList[i]];
     push();
-    translate(obstacleData["body-data"].position.x + obstacleData["display-data"]["offset"].x, obstacleData["body-data"].position.y + obstacleData["display-data"]["offset"].y, 0.15);
+    translate(obstacleData["body-data"].position.x + obstacleData["display-data"]["offset"].x, obstacleData["body-data"].position.y + obstacleData["display-data"]["offset"].y);
     rotate(obstacleData["display-data"]["offset"].angle);
     image(assetsLoaded[obstacleData["display-data"].src], 0, 0, obstacleData["display-data"].dimensions.width, obstacleData["display-data"].dimensions.height);
     if(debug) {
@@ -1111,8 +1111,8 @@ function displayWorld() {
     fill(clientData.options.shadowColour);
     rect((gameData.players[permanentID].state.previousPosition.x + gameData.players[permanentID].state.force.x * (syncedMS / gameData.lastTickDelay)) - shadowBuffer.width / 2 - 2500, (gameData.players[permanentID].state.previousPosition.y + gameData.players[permanentID].state.force.y * (syncedMS / gameData.lastTickDelay)), 5000, shadowBuffer.height);
     rect((gameData.players[permanentID].state.previousPosition.x + gameData.players[permanentID].state.force.x * (syncedMS / gameData.lastTickDelay)) + shadowBuffer.width / 2 + 2500, (gameData.players[permanentID].state.previousPosition.y + gameData.players[permanentID].state.force.y * (syncedMS / gameData.lastTickDelay)), 5000, shadowBuffer.height);
-    displayExplosionParticles();
     displayObstacles();
+    displayExplosionParticles();
     if(Math.round((queuedCameraLocation.z / 4)) * 4 != Math.round((gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view + 2000 / 4)) * 4) {
       queuedCameraLocation.z += Math.round((gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view + 2000 - queuedCameraLocation.z) / 6);
     }

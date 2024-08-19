@@ -47,10 +47,10 @@ function changeGun(gun) {
   document.getElementById("character-body").src = "assets/player/pose-" + gun + ".svg";
   gameData.selectedClass = gun;
 
-  document.getElementById("main").src = gameData.weapons[gameData.mapData.config.loadouts[gun][0]].images.lootSRC;
-  document.getElementById("pistol").src = gameData.weapons[gameData.mapData.config.loadouts[gun][1]].images.lootSRC;
-  document.getElementById("melee").src = gameData.weapons[gameData.mapData.config.loadouts[gun][2]].images.lootSRC;
-  document.getElementById("grenade").src = gameData.weapons[gameData.mapData.config.loadouts[gun][3]].images.lootSRC;
+  document.getElementById("main").src = gameData.weapons[gameData.loadouts[gun][0]].images.lootSRC;
+  document.getElementById("pistol").src = gameData.weapons[gameData.loadouts[gun][1]].images.lootSRC;
+  document.getElementById("melee").src = gameData.weapons[gameData.loadouts[gun][2]].images.lootSRC;
+  document.getElementById("grenade").src = gameData.weapons[gameData.loadouts[gun][3]].images.lootSRC;
 }
 
 function restrict(number, min, max) {
@@ -283,56 +283,66 @@ function displayParticles() {
         playerBuffer.rect(0, 0, particleData.size, particleData.size);
       }
       playerBuffer.pop();
+
     }
   }
 }
 
 function displayExplosionParticles() {
-  for(let i = 0; i < clientData.explosionParticles.length; i++) { 
-    const particleData = clientData.explosionParticles[i];
-    let opacity = restrict(Math.round(particleData.lifetime - (Date.now() - particleData.timeStamp)) + 1, 0, 255),
-    travelDistance = restrict((((Date.now() - particleData.timeStamp) / 100) / 6 / (particleData.travelDist / 300)) ** 0.2, 0, 1) * particleData.travelDist,
-    diameter = (((Date.now() - particleData.timeStamp) / 100) / 6 / 1.5) ** 0.1;
-    if(particleData.travelDist == 0) {
-      travelDistance = 0;
+  let particleTypes = ["smoke", "explo"];
+  for(let b = 0; b < particleTypes.length; b++) {
+    for(let i = 0; i < clientData.explosionParticles[particleTypes[b]].length; i++) { 
+      const particleData = clientData.explosionParticles[particleTypes[b]][i];
+      let opacity = restrict(Math.round(particleData.lifetime - (syncedMS + gameData.timeStamp - particleData.timeStamp)) + 1, 0, 255),
+      travelDistance = restrict((((Date.now() - particleData.timeStamp) / 100) / 6 / (particleData.travelDist / 300)) ** 0.2, 0, 1) * particleData.travelDist,
+      diameter = (((Date.now() - particleData.timeStamp) / 100) / 6 / 1.5) ** 0.1;
+      if(particleData.travelDist == 0) {
+        travelDistance = 0;
+      }
+      if(opacity <= 1) {
+        clientData.explosionParticles[particleData.type].splice(i, 1);
+        i--;
+      } else {
+        push();
+        translate(particleData.position.x + Math.cos(particleData.angle) * travelDistance, particleData.position.y + Math.sin(particleData.angle) * travelDistance);
+        fill("#333333" + hex(opacity)[6] + (hex(opacity)[7]));
+        ellipse(0, 0, (particleData.radius * 2 * diameter) + 58, (particleData.radius * 2 * diameter) + 58);
+        pop();
+      }
     }
-    if(opacity <= 1) {
-      clientData.explosionParticles.splice(i, 1);
-      i--;
-    } else {
-      push();
-      translate(particleData.position.x + Math.cos(particleData.angle) * travelDistance, particleData.position.y + Math.sin(particleData.angle) * travelDistance);
-      tint("#333333" + hex(opacity)[6] + (hex(opacity)[7]));
-      image(assetsLoaded["/assets/misc/circle.svg"], 0, 0, (particleData.radius * 2 * diameter) + 65, (particleData.radius * 2 * diameter) + 65);
-      pop();
-    }
-  }
-
-  for(let i = 0; i < clientData.explosionParticles.length; i++) { 
-    const particleData = clientData.explosionParticles[i];
-    let opacity = restrict(Math.round(particleData.lifetime - (Date.now() - particleData.timeStamp)) + 1, 0, 255),
-    travelDistance = restrict((((Date.now() - particleData.timeStamp) / 100) / 6 / (particleData.travelDist / 300)) ** 0.2, 0, 1) * particleData.travelDist,
-    diameter = (((Date.now() - particleData.timeStamp) / 100) / 6 / 1.5) ** 0.1;
-    if(particleData.travelDist == 0) {
-      travelDistance = 0;
-    }
-    if(opacity <= 1) {
-      clientData.explosionParticles.splice(i, 1);
-      i--;
-    } else {
-      push();
-      translate(particleData.position.x + Math.cos(particleData.angle) * travelDistance, particleData.position.y + Math.sin(particleData.angle) * travelDistance);
-      tint(particleData.colour + hex(opacity)[6] + (hex(opacity)[7]));
-      image(assetsLoaded["/assets/misc/circle.svg"], 0, 0, (particleData.radius * 2 * diameter), (particleData.radius * 2 * diameter));
-      pop();
+  
+    for(let i = 0; i < clientData.explosionParticles[particleTypes[b]].length; i++) { 
+      const particleData = clientData.explosionParticles[particleTypes[b]][i];
+      let opacity = restrict(Math.round(particleData.lifetime - (syncedMS + gameData.timeStamp - particleData.timeStamp)) + 1, 0, 255),
+      travelDistance = restrict((((Date.now() - particleData.timeStamp) / 100) / 6 / (particleData.travelDist / 300)) ** 0.2, 0, 1) * particleData.travelDist,
+      diameter = (((Date.now() - particleData.timeStamp) / 100) / 6 / 1.5) ** 0.1;
+      if(particleData.travelDist == 0) {
+        travelDistance = 0;
+      }
+      if(opacity <= 1) {
+        clientData.explosionParticles[particleData.type].splice(i, 1);
+        i--;
+      } else {
+        push();
+        translate(particleData.position.x + Math.cos(particleData.angle) * travelDistance, particleData.position.y + Math.sin(particleData.angle) * travelDistance);
+        fill(particleData.colour + hex(opacity)[6] + (hex(opacity)[7]));
+        ellipse(0, 0, (particleData.radius * 2 * diameter), (particleData.radius * 2 * diameter));
+        pop();
+  
+        if(debug) {
+          fill(255, 0, 0, 50);
+          ellipse(particleData.position.x, particleData.position.y, particleData.damageRadius * 2, particleData.damageRadius * 2);
+        }
+      }
     }
   }
 }
 
-function displayObstacles() {
+function displayObstacles(type) {
   const player = gameData.players[permanentID];
-  for (let i = 0; i < player.state.objectRenderList.length; i++) {
-    const obstacleData = gameData.mapData.obstacles[player.state.objectRenderList[i]];
+  for (let i = 0; i < player.state.objectRenderList[type].length; i++) {
+    let obstacleData = gameData.mapData.obstacles[player.state.objectRenderList[type][i]];
+    if(type == "nonShootables" ) obstacleData = gameData.mapData[type][player.state.objectRenderList[type][i]];
     push();
     translate(obstacleData["body-data"].position.x + obstacleData["display-data"]["offset"].x, obstacleData["body-data"].position.y + obstacleData["display-data"]["offset"].y);
     rotate(obstacleData["display-data"]["offset"].angle);
@@ -365,14 +375,26 @@ function displayGuns() {
       const playerData = gameData.players[gameData.users[i]],
       gun = gameData.weapons[playerData.guns[playerData.state.activeWeaponIndex]],
       tickDelay = syncedMS;
-      if(clientData.lastShotTimestamps[gameData.users[i]]) {
-        recoilMultiplier = 1 - ((Date.now() - clientData.lastShotTimestamps[gameData.users[i]]) / 170);
-        if(1 - ((Date.now() - clientData.lastShotTimestamps[gameData.users[i]]) / 170) < 0) {
-          recoilMultiplier = 0;
-          clientData.lastShotTimestamps[gameData.users[i]] = void null;
+      if(clientData.lastShotTimestamps[gameData.users[i]] && clientData.lastShotTimestamps[gameData.users[i]][0] || clientData.lastShotTimestamps[gameData.users[i]] && clientData.lastShotTimestamps[gameData.users[i]][1]) {
+        if(!gun.dual) {
+          recoilMultiplier = [1 - ((Date.now() - clientData.lastShotTimestamps[gameData.users[i]][0]) / 250), 1 - ((Date.now() - clientData.lastShotTimestamps[gameData.users[i]][0]) / 250)];
+          if(1 - ((Date.now() - clientData.lastShotTimestamps[gameData.users[i]][0]) / 250) < 0) {
+            recoilMultiplier = [0, 0];
+            clientData.lastShotTimestamps[gameData.users[i]] = [1, 1];
+          }
+        } else {
+          recoilMultiplier = [1 - ((Date.now() - clientData.lastShotTimestamps[gameData.users[i]][0]) / 250), 1 - ((Date.now() - clientData.lastShotTimestamps[gameData.users[i]][1]) / 250)];
+          if(1 - ((Date.now() - clientData.lastShotTimestamps[gameData.users[i]][0]) / 250) < 0) {
+            recoilMultiplier[0] = 0;
+            clientData.lastShotTimestamps[gameData.users[i]][0] = 1;
+          }
+          if(1 - ((Date.now() - clientData.lastShotTimestamps[gameData.users[i]][1]) / 250) < 0) {
+            recoilMultiplier[1] = 0;
+            clientData.lastShotTimestamps[gameData.users[i]][1] = 1;
+          }
         }
       } else {
-        recoilMultiplier = 0;
+        recoilMultiplier = [0, 0];
       }
       playerBuffer.push();
       playerBuffer.translate((playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)) - (gameData.players[permanentID].state.previousPosition.x + gameData.players[permanentID].state.force.x * (tickDelay / gameData.lastTickDelay)) + playerBuffer.width / 2, playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay) - (gameData.players[permanentID].state.previousPosition.y + gameData.players[permanentID].state.force.y * (tickDelay / gameData.lastTickDelay)) + playerBuffer.height / 2);
@@ -380,22 +402,42 @@ function displayGuns() {
         playerBuffer.rotate(atan2(mouseY - height / 2, mouseX - width / 2) + 90);
       } else {
         const oldAngleVector = {
-          x: Math.cos(playerData.state.previousAngle * Math.PI / 180),
-          y: Math.sin(playerData.state.previousAngle * Math.PI / 180)
+          x: cos(playerData.state.previousAngle),
+          y: sin(playerData.state.previousAngle)
         },
         newAngleVector = {
-          x: Math.cos(playerData.state.angle * Math.PI / 180),
-          y: Math.sin(playerData.state.angle * Math.PI / 180)
+          x: cos(playerData.state.angle),
+          y: sin(playerData.state.angle)
+        };
+        if(debug) {
+          playerBuffer.stroke("#ff0000");
+          playerBuffer.strokeWeight(10);
+          playerBuffer.line(-oldAngleVector.x * 500, -oldAngleVector.y * 500, -newAngleVector.x * 500, -newAngleVector.y * 500);
+          playerBuffer.noStroke();
         }
-        playerBuffer.rotate(Math.atan2(oldAngleVector.y + (newAngleVector.y - oldAngleVector.y) * (tickDelay / gameData.lastTickDelay), oldAngleVector.x + (newAngleVector.x - oldAngleVector.x) * (tickDelay / gameData.lastTickDelay)) / Math.PI * 180 - 90);
+        playerBuffer.rotate(atan2(oldAngleVector.y + (newAngleVector.y - oldAngleVector.y) * (tickDelay / gameData.lastTickDelay), oldAngleVector.x + (newAngleVector.x - oldAngleVector.x) * (tickDelay / gameData.lastTickDelay)) - 90);
       }
       if(gun.type != "grenade" || gun.type == "grenade" && playerData.state.mag[playerData.state.activeWeaponIndex] > 0) {
         playerBuffer.scale(0.7);
-        playerBuffer.image(assetsLoaded[gun.images.topdownSRC], gun.images.offset.x + recoilMultiplier * gun.recoilImpulse[2].x, gun.images.offset.y + recoilMultiplier * gun.recoilImpulse[2].y);
-        if(debug) {
-          playerBuffer.fill(255, 150, 0, 100);
-          playerBuffer.rectMode(CENTER);
-          playerBuffer.rect(gun.images.offset.x + recoilMultiplier * gun.recoilImpulse[2].x, gun.images.offset.y + recoilMultiplier * gun.recoilImpulse[2].y, assetsLoaded[gun.images.topdownSRC].width, assetsLoaded[gun.images.topdownSRC].height);
+        if(!gun.dual) {
+          playerBuffer.image(assetsLoaded[gun.images.topdownSRC], gun.images.offset.x + recoilMultiplier[0] * gun.recoilImpulse[2].x, gun.images.offset.y + recoilMultiplier[0] * gun.recoilImpulse[2].y);
+          if(debug) {
+            playerBuffer.fill(255, 150, 0, 100);
+            playerBuffer.rectMode(CENTER);
+            playerBuffer.rect(gun.images.offset.x + recoilMultiplier[0] * gun.recoilImpulse[2].x, gun.images.offset.y + recoilMultiplier[0] * gun.recoilImpulse[2].y, assetsLoaded[gun.images.topdownSRC].width, assetsLoaded[gun.images.topdownSRC].height);
+          }
+        } else {
+          playerBuffer.image(assetsLoaded[gun.images.topdownSRC], gun.images.offset.x + gun.handPositions[0].x * 1 / 0.7 + recoilMultiplier[0] * gun.recoilImpulse[2].x, gun.images.offset.y + recoilMultiplier[0] * gun.recoilImpulse[2].y);
+          playerBuffer.image(assetsLoaded[gun.images.topdownSRC], gun.images.offset.x + gun.handPositions[1].x * 1 / 0.7  + recoilMultiplier[1] * gun.recoilImpulse[2].x, gun.images.offset.y + recoilMultiplier[1] * gun.recoilImpulse[2].y);
+          if(debug) {
+            playerBuffer.fill(255, 150, 0, 100);
+            playerBuffer.rectMode(CENTER);
+            playerBuffer.rect(gun.images.offset.x + gun.handPositions[0].x * 1 / 0.7 + recoilMultiplier[0] * gun.recoilImpulse[2].x, gun.images.offset.y + recoilMultiplier[0] * gun.recoilImpulse[2].y, assetsLoaded[gun.images.topdownSRC].width, assetsLoaded[gun.images.topdownSRC].height);
+            playerBuffer.rect(gun.images.offset.x + gun.handPositions[1].x * 1 / 0.7 + recoilMultiplier[1] * gun.recoilImpulse[2].x, gun.images.offset.y + recoilMultiplier[1] * gun.recoilImpulse[2].y, assetsLoaded[gun.images.topdownSRC].width, assetsLoaded[gun.images.topdownSRC].height);
+          }
+        }
+        if(playerData.state.hasBomb) {
+          playerBuffer.image(assetsLoaded["/assets/weapons/c4_topdown.svg"], 0, 200);
         }
         playerBuffer.scale(1 / 0.7);
       }
@@ -404,8 +446,8 @@ function displayGuns() {
         playerBuffer.fill("#498fe9");
       }
       for (let j = 0; j < gun.handPositions.length; j++) {
-        playerBuffer.ellipse(gun.handPositions[j].x + recoilMultiplier * (gun.recoilImpulse[j].x * 0.7), gun.handPositions[j].y + recoilMultiplier * (gun.recoilImpulse[j].y * 0.7), 90, 90);
-        playerBuffer.image(assetsLoaded["/assets/player/player-hand.svg"], gun.handPositions[j].x + recoilMultiplier * (gun.recoilImpulse[j].x * 0.7), gun.handPositions[j].y + recoilMultiplier * (gun.recoilImpulse[j].y * 0.7), 100, 100);
+        playerBuffer.ellipse(gun.handPositions[j].x + recoilMultiplier[j] * (gun.recoilImpulse[j].x * 0.7), gun.handPositions[j].y + recoilMultiplier[j] * (gun.recoilImpulse[j].y * 0.7), 90, 90);
+        playerBuffer.image(assetsLoaded["/assets/player/player-hand.svg"], gun.handPositions[j].x + recoilMultiplier[j] * (gun.recoilImpulse[j].x * 0.7), gun.handPositions[j].y + recoilMultiplier[j] * (gun.recoilImpulse[j].y * 0.7), 100, 100);
       }
       playerBuffer.pop();
     }
@@ -420,7 +462,7 @@ function displayGrenades() {
     let lengthMultiplier = restrict(sqrt(((Date.now() - grenade.timeStamp) / 50) / 4 / (grenade.throwLength / 300)), 0, 1);
     if(lengthMultiplier == 1 && !grenade.hasExploded) {
       for(let j = 0; j < clientData.explosionParticleTypes.types[grenade.explosionType].particleList.length; j++) {
-        clientData.explosionParticles.push({
+        clientData.explosionParticles[grenade.explosionType].push({
           position: {
             x: grenade.coordinates.start.x + cos(grenade.angle) * (-(lengthMultiplier * grenade.throwLength) - 20), 
             y: grenade.coordinates.start.y + sin(grenade.angle) * (-(lengthMultiplier * grenade.throwLength) - 20)
@@ -429,12 +471,13 @@ function displayGrenades() {
           radius: clientData.explosionParticleTypes.types[grenade.explosionType].particleList[j].radius,
           lifetime: clientData.explosionParticleTypes.types[grenade.explosionType].particleList[j].lifetime,
           travelDist: clientData.explosionParticleTypes.types[grenade.explosionType].particleList[j].travelDist,
-          angle: -grenade.angle + clientData.explosionParticleTypes.types[grenade.explosionType].particleList[j].angle,
-          definition: Math.round(clientData.explosionParticleTypes.types[grenade.explosionType].particleList[j].radius / 20) + 5,
-          timeStamp: Date.now()
+          angle: grenade.angle * 90 + clientData.explosionParticleTypes.types[grenade.explosionType].particleList[j].angle,
+          timeStamp: grenade.timeStamp + 50 * 4 * (grenade.throwLength / 300),
+          type: grenade.explosionType,
+          damageRadius: grenade.damageRadius
         });
       }
-      assetsLoaded[clientData.explosionParticleTypes.types[grenade.explosionType].sound].volume(0.4 - (Math.sqrt(squaredDist(gameData.players[permanentID].state.position, {x: grenade.coordinates.start.x + cos(grenade.angle) * (-(lengthMultiplier * grenade.throwLength) - 20), y: grenade.coordinates.start.y + sin(grenade.angle) * (-(lengthMultiplier * grenade.throwLength) - 20)})) / 20000));
+      assetsLoaded[clientData.explosionParticleTypes.types[grenade.explosionType].sound].volume((0.4 - (Math.sqrt(squaredDist(gameData.players[permanentID].state.position, {x: grenade.coordinates.start.x + cos(grenade.angle) * (-(lengthMultiplier * grenade.throwLength) - 20), y: grenade.coordinates.start.y + sin(grenade.angle) * (-(lengthMultiplier * grenade.throwLength) - 20)})) / 20000)) * clientData.options.volume);
       assetsLoaded[clientData.explosionParticleTypes.types[grenade.explosionType].sound].play();
       grenade.hasExploded = true;
       gameData.grenades.splice(i, 1);
@@ -491,7 +534,7 @@ function displayBullets() {
       }
       if(src) {
         if(0.4 - (Math.sqrt(squaredDist(gameData.players[permanentID].state.position, bullet.coordinates.finish)) / 20000) > 0) {
-          assetsLoaded[src].volume(0.4 - (Math.sqrt(squaredDist(gameData.players[permanentID].state.position, bullet.coordinates.finish)) / 20000));
+          assetsLoaded[src].volume((0.4 - (Math.sqrt(squaredDist(gameData.players[permanentID].state.position, bullet.coordinates.finish)) / 20000)) * clientData.options.volume);
           assetsLoaded[src].play();
         }
       }
@@ -598,337 +641,51 @@ function displayFog() {
   shadowBuffer.rotate(atan2(mouseY - height / 2, mouseX - width / 2) + 90);
   shadowBuffer.image(assetsLoaded["/assets/misc/vision-cone.svg"], 0, 0, 7000, 7000);
   shadowBuffer.pop();*/
-  for(let i = 0; i < playerData.state.objectRenderList.length; i++) {
-    const obstacleData = gameData.mapData.obstacles[playerData.state.objectRenderList[i]],
-    playerObjectAngle = -atan2(obstacleData["body-data"].position.x - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), obstacleData["body-data"].position.y - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) + 90;
-    switch(obstacleData["body-data"].type) {
-      case "rectangle":
-        let playerCoordinates = {x: (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), y: (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))},
-        relativePositionState = {x: "middle", y: "middle"},
-        points = {point1: {}, point2: {}, optional1: {exists: false}, optional2: {exists: false} };
-        if(obstacleData["body-data"].options.angle == 0) {
-          if(playerCoordinates.x < obstacleData["body-data"].position.x - obstacleData["body-data"].dimensions.width / 2) {
-            relativePositionState.x = "left";
-          } else if(playerCoordinates.x >= obstacleData["body-data"].position.x - obstacleData["body-data"].dimensions.width / 2 && playerCoordinates.x <= obstacleData["body-data"].position.x + obstacleData["body-data"].dimensions.width / 2) {
-            relativePositionState.x = "middle";
-          } else if(playerCoordinates.x > obstacleData["body-data"].position.x + obstacleData["body-data"].dimensions.width / 2) {
-            relativePositionState.x = "right";
-          }
-
-          if(playerCoordinates.y < obstacleData["body-data"].position.y - obstacleData["body-data"].dimensions.height / 2) {
-            relativePositionState.y = "top";
-          } else if(playerCoordinates.y >= obstacleData["body-data"].position.y - obstacleData["body-data"].dimensions.height / 2 && playerCoordinates.y <= obstacleData["body-data"].position.y + obstacleData["body-data"].dimensions.height / 2) {
-            relativePositionState.y = "middle";
-          } else if(playerCoordinates.y > obstacleData["body-data"].position.y + obstacleData["body-data"].dimensions.height / 2) {
-            relativePositionState.y = "bottom";
-          }
-
-          switch(relativePositionState.x) {
-            case "left": 
-            switch(relativePositionState.y) {
-              case "top": 
-                points.point1 = {
-                  x: -5 + obstacleData["body-data"].dimensions.width / 2,
-                  y: 5 + -obstacleData["body-data"].dimensions.height / 2
-                };
-                points.point2 = {
-                  x: 5 + -obstacleData["body-data"].dimensions.width / 2,
-                  y: -5 + obstacleData["body-data"].dimensions.height / 2
-                };
-              break;
-              case "middle": 
-                points.point1 = {
-                  x: 5 + -obstacleData["body-data"].dimensions.width / 2,
-                  y: 5 + -obstacleData["body-data"].dimensions.height / 2
-                };
-                points.point2 = {
-                  x: 5 + -obstacleData["body-data"].dimensions.width / 2,
-                  y: -5 + obstacleData["body-data"].dimensions.height / 2
-                };
-              break;
-              case "bottom": 
-                points.point1 = {
-                  x: 5 + -obstacleData["body-data"].dimensions.width / 2,
-                  y: 5 + -obstacleData["body-data"].dimensions.height / 2
-                };
-                points.point2 = {
-                  x: -5 + obstacleData["body-data"].dimensions.width / 2,
-                  y: -5 + obstacleData["body-data"].dimensions.height / 2
-                };
-              break;
-            }
-            break;
-            case "middle": 
-              switch(relativePositionState.y) {
-                case "top": 
-                  points.point1 = {
-                    x: 5 + -obstacleData["body-data"].dimensions.width / 2,
-                    y: 5 + -obstacleData["body-data"].dimensions.height / 2
-                  };
-                  points.point2 = {
-                    x: -5 + obstacleData["body-data"].dimensions.width / 2,
-                    y: 5 + -obstacleData["body-data"].dimensions.height / 2
-                  };
-                break;
-                case "middle": 
-                  points.point1 = {
-                    x: "inside",
-                    y: "inside"
-                  };
-                  points.point2 = {
-                    x: "inside",
-                    y: "inside"
-                  };
-                break;
-                case "bottom": 
-                  points.point1 = {
-                    x: 5 + -obstacleData["body-data"].dimensions.width / 2,
-                    y: -5 + obstacleData["body-data"].dimensions.height / 2
-                  };
-                  points.point2 = {
-                    x: -5 + obstacleData["body-data"].dimensions.width / 2,
-                    y: -5 + obstacleData["body-data"].dimensions.height / 2
-                  };
-                break;
-              }
-            break;
-            case "right": 
-              switch(relativePositionState.y) {
-                case "top": 
-                  points.point1 = {
-                    x: -5 + obstacleData["body-data"].dimensions.width / 2,
-                    y: -5 + obstacleData["body-data"].dimensions.height / 2
-                  };
-                  points.point2 = {
-                    x: 5 + -obstacleData["body-data"].dimensions.width / 2,
-                    y: 5 + -obstacleData["body-data"].dimensions.height / 2
-                  };
-                break;
-                case "middle": 
-                  points.point1 = {
-                    x: -5 + obstacleData["body-data"].dimensions.width / 2,
-                    y: 5 + -obstacleData["body-data"].dimensions.height / 2
-                  };
-                  points.point2 = {
-                    x: -5 + obstacleData["body-data"].dimensions.width / 2,
-                    y: -5 + obstacleData["body-data"].dimensions.height / 2
-                  };
-                break;
-                case "bottom": 
-                  points.point1 = {
-                    x: -5 + obstacleData["body-data"].dimensions.width / 2,
-                    y: 5 + -obstacleData["body-data"].dimensions.height / 2
-                  };
-                  points.point2 = {
-                    x: 5 + -obstacleData["body-data"].dimensions.width / 2,
-                    y: -5 + obstacleData["body-data"].dimensions.height / 2
-                  };
-                break;
-              }
-            break;
-          }
-
-          playerBuffer.erase();
-          playerBuffer.push();
-          playerBuffer.translate(obstacleData["body-data"].position.x - (gameData.players[permanentID].state.previousPosition.x + gameData.players[permanentID].state.force.x * (tickDelay / gameData.lastTickDelay)) + playerBuffer.width / 2, obstacleData["body-data"].position.y - (gameData.players[permanentID].state.previousPosition.y + gameData.players[permanentID].state.force.y * (tickDelay / gameData.lastTickDelay)) + playerBuffer.height / 2);
-          playerBuffer.beginShape();
-          playerBuffer.vertex(points.point1.x, points.point1.y);
-          playerBuffer.vertex(points.point1.x - (cos(-atan2((obstacleData["body-data"].position.x + points.point1.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + points.point1.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (500000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)), points.point1.y - (sin(-atan2((obstacleData["body-data"].position.x + points.point1.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + points.point1.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (500000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)));
-          playerBuffer.vertex(points.point2.x - (cos(-atan2((obstacleData["body-data"].position.x + points.point2.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + points.point2.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (500000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)), points.point2.y - (sin(-atan2((obstacleData["body-data"].position.x + points.point2.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + points.point2.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (500000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)));
-          playerBuffer.vertex(points.point2.x, points.point2.y);
-          playerBuffer.endShape();
-          playerBuffer.pop();
-          playerBuffer.noErase();
-
-          shadowBuffer.push();
-          shadowBuffer.translate(obstacleData["body-data"].position.x - (gameData.players[permanentID].state.previousPosition.x + gameData.players[permanentID].state.force.x * (tickDelay / gameData.lastTickDelay)) + shadowBuffer.width / 2, obstacleData["body-data"].position.y - (gameData.players[permanentID].state.previousPosition.y + gameData.players[permanentID].state.force.y * (tickDelay / gameData.lastTickDelay)) + shadowBuffer.height / 2);
-          shadowBuffer.translate(0, 0, 0.15);
-          shadowBuffer.fill("#ffffff");
-          shadowBuffer.beginShape();
-          shadowBuffer.vertex(points.point1.x, points.point1.y);
-          shadowBuffer.vertex(points.point1.x - (cos(-atan2((obstacleData["body-data"].position.x + points.point1.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + points.point1.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (500000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)), points.point1.y - (sin(-atan2((obstacleData["body-data"].position.x + points.point1.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + points.point1.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (500000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)));
-          shadowBuffer.vertex(points.point2.x - (cos(-atan2((obstacleData["body-data"].position.x + points.point2.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + points.point2.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (500000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)), points.point2.y - (sin(-atan2((obstacleData["body-data"].position.x + points.point2.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + points.point2.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (500000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)));
-          shadowBuffer.vertex(points.point2.x, points.point2.y);
-          shadowBuffer.endShape();
-          shadowBuffer.pop();
-        } else {
-          let objectToPlayerData = {
-            distance: Math.sqrt(squaredDist(obstacleData["body-data"].position, playerCoordinates)),
-            angle: atan2(obstacleData["body-data"].position.y - playerCoordinates.y, obstacleData["body-data"].position.x - playerCoordinates.x),
-            objectAngle: obstacleData["body-data"].options.angle * 180 / Math.PI
-          },
-          newRotatedPlayerCoordinates = {
-            x: (cos(objectToPlayerData.angle + -objectToPlayerData.objectAngle) * objectToPlayerData.distance) + obstacleData["body-data"].position.x,
-            y: (sin(objectToPlayerData.angle + -objectToPlayerData.objectAngle) * objectToPlayerData.distance) + obstacleData["body-data"].position.y,
-          };
-          if(newRotatedPlayerCoordinates.x < obstacleData["body-data"].position.x - obstacleData["body-data"].dimensions.width / 2) {
-            relativePositionState.x = "left";
-          } else if(newRotatedPlayerCoordinates.x >= obstacleData["body-data"].position.x - obstacleData["body-data"].dimensions.width / 2 && newRotatedPlayerCoordinates.x <= obstacleData["body-data"].position.x + obstacleData["body-data"].dimensions.width / 2) {
-            relativePositionState.x = "middle";
-          } else if(newRotatedPlayerCoordinates.x > obstacleData["body-data"].position.x + obstacleData["body-data"].dimensions.width / 2) {
-            relativePositionState.x = "right";
-          }
-
-          if(newRotatedPlayerCoordinates.y < obstacleData["body-data"].position.y - obstacleData["body-data"].dimensions.height / 2) {
-            relativePositionState.y = "top";
-          } else if(newRotatedPlayerCoordinates.y >= obstacleData["body-data"].position.y - obstacleData["body-data"].dimensions.height / 2 && newRotatedPlayerCoordinates.y <= obstacleData["body-data"].position.y + obstacleData["body-data"].dimensions.height / 2) {
-            relativePositionState.y = "middle";
-          } else if(newRotatedPlayerCoordinates.y > obstacleData["body-data"].position.y + obstacleData["body-data"].dimensions.height / 2) {
-            relativePositionState.y = "bottom";
-          }
-
-          switch(relativePositionState.x) {
-            case "left": 
-            switch(relativePositionState.y) {
-              case "top": 
-                points.point1 = {
-                  x: -5 + obstacleData["body-data"].dimensions.width / 2,
-                  y: 5 + -obstacleData["body-data"].dimensions.height / 2
-                };
-                points.point2 = {
-                  x: 5 + -obstacleData["body-data"].dimensions.width / 2,
-                  y: -5 + obstacleData["body-data"].dimensions.height / 2
-                };
-              break;
-              case "middle": 
-                points.point1 = {
-                  x: 5 + -obstacleData["body-data"].dimensions.width / 2,
-                  y: 5 + -obstacleData["body-data"].dimensions.height / 2
-                };
-                points.point2 = {
-                  x: 5 + -obstacleData["body-data"].dimensions.width / 2,
-                  y: -5 + obstacleData["body-data"].dimensions.height / 2
-                };
-              break;
-              case "bottom": 
-                points.point1 = {
-                  x: 5 + -obstacleData["body-data"].dimensions.width / 2,
-                  y: 5 + -obstacleData["body-data"].dimensions.height / 2
-                };
-                points.point2 = {
-                  x: -5 + obstacleData["body-data"].dimensions.width / 2,
-                  y: -5 + obstacleData["body-data"].dimensions.height / 2
-                };
-              break;
-            }
-            break;
-            case "middle": 
-              switch(relativePositionState.y) {
-                case "top": 
-                  points.point1 = {
-                    x: 5 + -obstacleData["body-data"].dimensions.width / 2,
-                    y: 5 + -obstacleData["body-data"].dimensions.height / 2
-                  };
-                  points.point2 = {
-                    x: -5 + obstacleData["body-data"].dimensions.width / 2,
-                    y: 5 + -obstacleData["body-data"].dimensions.height / 2
-                  };
-                break;
-                case "middle": 
-                  points.point1 = {
-                    x: 5 + -obstacleData["body-data"].dimensions.width / 2,
-                    y: -5 + obstacleData["body-data"].dimensions.height / 2
-                  };
-                  points.point2 = {
-                    x: -5 + obstacleData["body-data"].dimensions.width / 2,
-                    y: -5 + obstacleData["body-data"].dimensions.height / 2
-                  };
-                break;
-                case "bottom": 
-                  points.point1 = {
-                    x: 5 + -obstacleData["body-data"].dimensions.width / 2,
-                    y: -5 + obstacleData["body-data"].dimensions.height / 2
-                  };
-                  points.point2 = {
-                    x: -5 + obstacleData["body-data"].dimensions.width / 2,
-                    y: -5 + obstacleData["body-data"].dimensions.height / 2
-                  };
-                break;
-              }
-            break;
-            case "right": 
-              switch(relativePositionState.y) {
-                case "top": 
-                  points.point1 = {
-                    x: -5 + obstacleData["body-data"].dimensions.width / 2,
-                    y: -5 + obstacleData["body-data"].dimensions.height / 2
-                  };
-                  points.point2 = {
-                    x: 5 + -obstacleData["body-data"].dimensions.width / 2,
-                    y: 5 + -obstacleData["body-data"].dimensions.height / 2
-                  };
-                break;
-                case "middle": 
-                  points.point1 = {
-                    x: -5 + obstacleData["body-data"].dimensions.width / 2,
-                    y: 5 + -obstacleData["body-data"].dimensions.height / 2
-                  };
-                  points.point2 = {
-                    x: -5 + obstacleData["body-data"].dimensions.width / 2,
-                    y: -5 + obstacleData["body-data"].dimensions.height / 2
-                  };
-                break;
-                case "bottom": 
-                  points.point1 = {
-                    x: -5 + obstacleData["body-data"].dimensions.width / 2,
-                    y: 5 + -obstacleData["body-data"].dimensions.height / 2
-                  };
-                  points.point2 = {
-                    x: 5 + -obstacleData["body-data"].dimensions.width / 2,
-                    y: -5 + obstacleData["body-data"].dimensions.height / 2
-                  };
-                break;
-              }
-            break;
-          }
-          const radius = (Math.sqrt(obstacleData["body-data"].dimensions.width ** 2 + obstacleData["body-data"].dimensions.height ** 2) / 2) - 5,
-          pointAngles = {
-            point1: atan2(-points.point1.y, -points.point1.x),
-            point2: atan2(-points.point2.y, -points.point2.x)
-          };
-          points.point1 = {
-            x: cos(pointAngles.point1 + objectToPlayerData.objectAngle) * radius,
-            y: sin(pointAngles.point1 + objectToPlayerData.objectAngle) * radius
-          };
-          points.point2 = {
-            x: cos(pointAngles.point2 + objectToPlayerData.objectAngle) * radius,
-            y: sin(pointAngles.point2 + objectToPlayerData.objectAngle) * radius
-          };
-
-          playerBuffer.erase();
-          playerBuffer.push();
-          playerBuffer.translate(obstacleData["body-data"].position.x - (gameData.players[permanentID].state.previousPosition.x + gameData.players[permanentID].state.force.x * (tickDelay / gameData.lastTickDelay)) + playerBuffer.width / 2, obstacleData["body-data"].position.y - (gameData.players[permanentID].state.previousPosition.y + gameData.players[permanentID].state.force.y * (tickDelay / gameData.lastTickDelay)) + playerBuffer.height / 2);
-          playerBuffer.beginShape();
-          playerBuffer.vertex(points.point1.x, points.point1.y);
-          playerBuffer.vertex(points.point1.x - (cos(-atan2((obstacleData["body-data"].position.x + points.point1.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + points.point1.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (500000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)), points.point1.y - (sin(-atan2((obstacleData["body-data"].position.x + points.point1.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + points.point1.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (500000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)));
-          playerBuffer.vertex(points.point2.x - (cos(-atan2((obstacleData["body-data"].position.x + points.point2.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + points.point2.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (500000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)), points.point2.y - (sin(-atan2((obstacleData["body-data"].position.x + points.point2.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + points.point2.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (500000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)));
-          playerBuffer.vertex(points.point2.x, points.point2.y);
-          playerBuffer.endShape();
-          playerBuffer.pop();
-          playerBuffer.noErase();
-
-          shadowBuffer.push();
-          shadowBuffer.translate(obstacleData["body-data"].position.x - (gameData.players[permanentID].state.previousPosition.x + gameData.players[permanentID].state.force.x * (tickDelay / gameData.lastTickDelay)) + shadowBuffer.width / 2, obstacleData["body-data"].position.y - (gameData.players[permanentID].state.previousPosition.y + gameData.players[permanentID].state.force.y * (tickDelay / gameData.lastTickDelay)) + shadowBuffer.height / 2);
-          shadowBuffer.translate(0, 0, 0.15);
-          shadowBuffer.fill("#ffffff");
-          shadowBuffer.beginShape();
-          shadowBuffer.vertex(points.point1.x, points.point1.y);
-          shadowBuffer.vertex(points.point1.x - (cos(-atan2((obstacleData["body-data"].position.x + points.point1.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + points.point1.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (500000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)), points.point1.y - (sin(-atan2((obstacleData["body-data"].position.x + points.point1.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + points.point1.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (500000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)));
-          shadowBuffer.vertex(points.point2.x - (cos(-atan2((obstacleData["body-data"].position.x + points.point2.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + points.point2.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (500000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)), points.point2.y - (sin(-atan2((obstacleData["body-data"].position.x + points.point2.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + points.point2.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (500000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)));
-          shadowBuffer.vertex(points.point2.x, points.point2.y);
-          shadowBuffer.endShape();
-          shadowBuffer.pop();
+  for(let i = 0; i < clientData.explosionParticles["smoke"].length; i++) {
+    let particleData = clientData.explosionParticles["smoke"][i];
+    if(!clientData.isBlind) {
+      diameter = (((Date.now() - particleData.timeStamp) / 100) / 6 / 1.5) ** 0.1,
+      travelDistance = restrict((((Date.now() - particleData.timeStamp) / 100) / 6 / (particleData.travelDist / 300)) ** 0.2, 0, 1) * particleData.travelDist,
+      obstacleData = {
+        "body-data": {
+          radius: ((particleData.radius * 2 * diameter) + 80) / 2,
+          position: {x: particleData.position.x + Math.cos(particleData.angle) * travelDistance, y: particleData.position.y + Math.sin(particleData.angle) * travelDistance},
         }
-        break;
-      case "circle":
-        // solves ssa triangle to determine what portion of the circle is visible
-        let playerObjectDistance = Math.sqrt(squaredDist({x: (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), y: (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))}, obstacleData["body-data"].position)),
-        radius = obstacleData["body-data"].radius,
-        secondAngle = asin((radius * sin(90)) / playerObjectDistance),
-        finalAngle = 90 - secondAngle,
-        negativeCoordinate = {x: cos(playerObjectAngle - finalAngle + 180) * radius, y: sin(playerObjectAngle - finalAngle + 180) * radius},
-        positiveCoordinate = {x: cos(playerObjectAngle + finalAngle + 180) * radius, y: sin(playerObjectAngle + finalAngle + 180) * radius};
-
+      }
+      const playerObjectAngle = -atan2(obstacleData["body-data"].position.x - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), obstacleData["body-data"].position.y - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) + 90;
+      let playerObjectDistance = Math.sqrt(squaredDist({x: (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), y: (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))}, obstacleData["body-data"].position)),
+      radius = obstacleData["body-data"].radius,
+      secondAngle = asin((radius * sin(90)) / playerObjectDistance),
+      finalAngle = 90 - secondAngle,
+      negativeCoordinate = {x: cos(playerObjectAngle - finalAngle + 180) * radius, y: sin(playerObjectAngle - finalAngle + 180) * radius},
+      positiveCoordinate = {x: cos(playerObjectAngle + finalAngle + 180) * radius, y: sin(playerObjectAngle + finalAngle + 180) * radius};
+  
+      if(playerObjectDistance <= obstacleData["body-data"].radius + 25) {
+        clientData.isBlind = true;
+        playerBuffer.erase();
+        playerBuffer.push();
+        playerBuffer.translate(obstacleData["body-data"].position.x - (gameData.players[permanentID].state.previousPosition.x + gameData.players[permanentID].state.force.x * (tickDelay / gameData.lastTickDelay)) + playerBuffer.width / 2, obstacleData["body-data"].position.y - (gameData.players[permanentID].state.previousPosition.y + gameData.players[permanentID].state.force.y * (tickDelay / gameData.lastTickDelay)) + playerBuffer.height / 2);
+        playerBuffer.beginShape();
+        playerBuffer.vertex(-shadowBuffer.width, -shadowBuffer.height);
+        playerBuffer.vertex(shadowBuffer.width, -shadowBuffer.height);
+        playerBuffer.vertex(shadowBuffer.width, shadowBuffer.height);
+        playerBuffer.vertex(-shadowBuffer.width, shadowBuffer.height);
+        playerBuffer.endShape();
+        playerBuffer.pop();
+        playerBuffer.noErase();
+  
+        shadowBuffer.push();
+        shadowBuffer.translate(obstacleData["body-data"].position.x - (gameData.players[permanentID].state.previousPosition.x + gameData.players[permanentID].state.force.x * (tickDelay / gameData.lastTickDelay)) + shadowBuffer.width / 2, obstacleData["body-data"].position.y - (gameData.players[permanentID].state.previousPosition.y + gameData.players[permanentID].state.force.y * (tickDelay / gameData.lastTickDelay)) + shadowBuffer.height / 2);
+        shadowBuffer.fill("#ffffff");
+        shadowBuffer.translate(0, 0, 0.15);
+        shadowBuffer.beginShape();
+        playerBuffer.vertex(-shadowBuffer.width, -shadowBuffer.height);
+        playerBuffer.vertex(shadowBuffer.width, -shadowBuffer.height);
+        playerBuffer.vertex(shadowBuffer.width, shadowBuffer.height);
+        playerBuffer.vertex(-shadowBuffer.width, shadowBuffer.height);
+        shadowBuffer.endShape();
+        shadowBuffer.pop();
+      } else {
         playerBuffer.erase();
         playerBuffer.push();
         playerBuffer.translate(obstacleData["body-data"].position.x - (gameData.players[permanentID].state.previousPosition.x + gameData.players[permanentID].state.force.x * (tickDelay / gameData.lastTickDelay)) + playerBuffer.width / 2, obstacleData["body-data"].position.y - (gameData.players[permanentID].state.previousPosition.y + gameData.players[permanentID].state.force.y * (tickDelay / gameData.lastTickDelay)) + playerBuffer.height / 2);
@@ -940,7 +697,7 @@ function displayFog() {
         playerBuffer.endShape();
         playerBuffer.pop();
         playerBuffer.noErase();
-          
+              
         shadowBuffer.push();
         shadowBuffer.translate(obstacleData["body-data"].position.x - (gameData.players[permanentID].state.previousPosition.x + gameData.players[permanentID].state.force.x * (tickDelay / gameData.lastTickDelay)) + shadowBuffer.width / 2, obstacleData["body-data"].position.y - (gameData.players[permanentID].state.previousPosition.y + gameData.players[permanentID].state.force.y * (tickDelay / gameData.lastTickDelay)) + shadowBuffer.height / 2);
         shadowBuffer.fill("#ffffff");
@@ -951,77 +708,368 @@ function displayFog() {
         shadowBuffer.vertex(negativeCoordinate.x - (cos(-atan2((obstacleData["body-data"].position.x + negativeCoordinate.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + negativeCoordinate.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (5000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)), negativeCoordinate.y - (sin(-atan2((obstacleData["body-data"].position.x + negativeCoordinate.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + negativeCoordinate.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (5000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)));
         shadowBuffer.vertex(negativeCoordinate.x, negativeCoordinate.y);
         shadowBuffer.endShape();
+        shadowBuffer.ellipse(0, 0, radius * 2);
         shadowBuffer.pop();
-        break;
-    }
-  }
-  for(let i = 0; i < clientData.explosionParticles.length; i++) {
-    let particleData = clientData.explosionParticles[i],
-    diameter = (((Date.now() - particleData.timeStamp) / 100) / 6 / 1.5) ** 0.1,
-    travelDistance = restrict((((Date.now() - particleData.timeStamp) / 100) / 6 / (particleData.travelDist / 300)) ** 0.2, 0, 1) * particleData.travelDist,
-    obstacleData = {
-      "body-data": {
-        radius: ((particleData.radius * 2 * diameter) + 80) / 2,
-        position: {x: particleData.position.x + Math.cos(particleData.angle) * travelDistance, y: particleData.position.y + Math.sin(particleData.angle) * travelDistance},
       }
     }
-    const playerObjectAngle = -atan2(obstacleData["body-data"].position.x - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), obstacleData["body-data"].position.y - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) + 90;
-    let playerObjectDistance = Math.sqrt(squaredDist({x: (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), y: (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))}, obstacleData["body-data"].position)),
-    radius = obstacleData["body-data"].radius,
-    secondAngle = asin((radius * sin(90)) / playerObjectDistance),
-    finalAngle = 90 - secondAngle,
-    negativeCoordinate = {x: cos(playerObjectAngle - finalAngle + 180) * radius, y: sin(playerObjectAngle - finalAngle + 180) * radius},
-    positiveCoordinate = {x: cos(playerObjectAngle + finalAngle + 180) * radius, y: sin(playerObjectAngle + finalAngle + 180) * radius};
-
-    if(playerObjectDistance <= obstacleData["body-data"].radius + 25) {
-      playerBuffer.erase();
-      playerBuffer.push();
-      playerBuffer.translate(obstacleData["body-data"].position.x - (gameData.players[permanentID].state.previousPosition.x + gameData.players[permanentID].state.force.x * (tickDelay / gameData.lastTickDelay)) + playerBuffer.width / 2, obstacleData["body-data"].position.y - (gameData.players[permanentID].state.previousPosition.y + gameData.players[permanentID].state.force.y * (tickDelay / gameData.lastTickDelay)) + playerBuffer.height / 2);
-      playerBuffer.beginShape();
-      playerBuffer.vertex(-shadowBuffer.width, -shadowBuffer.height);
-      playerBuffer.vertex(shadowBuffer.width, -shadowBuffer.height);
-      playerBuffer.vertex(shadowBuffer.width, shadowBuffer.height);
-      playerBuffer.vertex(-shadowBuffer.width, shadowBuffer.height);
-      playerBuffer.endShape();
-      playerBuffer.pop();
-      playerBuffer.noErase();
-
-      shadowBuffer.push();
-      shadowBuffer.translate(obstacleData["body-data"].position.x - (gameData.players[permanentID].state.previousPosition.x + gameData.players[permanentID].state.force.x * (tickDelay / gameData.lastTickDelay)) + shadowBuffer.width / 2, obstacleData["body-data"].position.y - (gameData.players[permanentID].state.previousPosition.y + gameData.players[permanentID].state.force.y * (tickDelay / gameData.lastTickDelay)) + shadowBuffer.height / 2);
-      shadowBuffer.fill("#ffffff");
-      shadowBuffer.translate(0, 0, 0.15);
-      shadowBuffer.beginShape();
-      playerBuffer.vertex(-shadowBuffer.width, -shadowBuffer.height);
-      playerBuffer.vertex(shadowBuffer.width, -shadowBuffer.height);
-      playerBuffer.vertex(shadowBuffer.width, shadowBuffer.height);
-      playerBuffer.vertex(-shadowBuffer.width, shadowBuffer.height);
-      shadowBuffer.endShape();
-      shadowBuffer.pop();
-    } else {
-      playerBuffer.erase();
-      playerBuffer.push();
-      playerBuffer.translate(obstacleData["body-data"].position.x - (gameData.players[permanentID].state.previousPosition.x + gameData.players[permanentID].state.force.x * (tickDelay / gameData.lastTickDelay)) + playerBuffer.width / 2, obstacleData["body-data"].position.y - (gameData.players[permanentID].state.previousPosition.y + gameData.players[permanentID].state.force.y * (tickDelay / gameData.lastTickDelay)) + playerBuffer.height / 2);
-      playerBuffer.beginShape();
-      playerBuffer.vertex(positiveCoordinate.x, positiveCoordinate.y);
-      playerBuffer.vertex(positiveCoordinate.x - (cos(-atan2((obstacleData["body-data"].position.x + positiveCoordinate.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + positiveCoordinate.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (5000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)), positiveCoordinate.y - (sin(-atan2((obstacleData["body-data"].position.x + positiveCoordinate.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + positiveCoordinate.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (5000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)));
-      playerBuffer.vertex(negativeCoordinate.x - (cos(-atan2((obstacleData["body-data"].position.x + negativeCoordinate.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + negativeCoordinate.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (5000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)), negativeCoordinate.y - (sin(-atan2((obstacleData["body-data"].position.x + negativeCoordinate.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + negativeCoordinate.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (5000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)));
-      playerBuffer.vertex(negativeCoordinate.x, negativeCoordinate.y);
-      playerBuffer.endShape();
-      playerBuffer.pop();
-      playerBuffer.noErase();
+  }
+  if(!clientData.isBlind) {
+    for(let i = 0; i < playerData.state.objectRenderList.basic.length; i++) {
+      const obstacleData = gameData.mapData.obstacles[playerData.state.objectRenderList.basic[i]],
+      playerObjectAngle = -atan2(obstacleData["body-data"].position.x - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), obstacleData["body-data"].position.y - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) + 90;
+      switch(obstacleData["body-data"].type) {
+        case "rectangle":
+          let playerCoordinates = {x: (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), y: (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))},
+          relativePositionState = {x: "middle", y: "middle"},
+          points = {point1: {}, point2: {}, optional1: {exists: false}, optional2: {exists: false} };
+          if(obstacleData["body-data"].options.angle == 0) {
+            if(playerCoordinates.x < obstacleData["body-data"].position.x - obstacleData["body-data"].dimensions.width / 2) {
+              relativePositionState.x = "left";
+            } else if(playerCoordinates.x >= obstacleData["body-data"].position.x - obstacleData["body-data"].dimensions.width / 2 && playerCoordinates.x <= obstacleData["body-data"].position.x + obstacleData["body-data"].dimensions.width / 2) {
+              relativePositionState.x = "middle";
+            } else if(playerCoordinates.x > obstacleData["body-data"].position.x + obstacleData["body-data"].dimensions.width / 2) {
+              relativePositionState.x = "right";
+            }
+  
+            if(playerCoordinates.y < obstacleData["body-data"].position.y - obstacleData["body-data"].dimensions.height / 2) {
+              relativePositionState.y = "top";
+            } else if(playerCoordinates.y >= obstacleData["body-data"].position.y - obstacleData["body-data"].dimensions.height / 2 && playerCoordinates.y <= obstacleData["body-data"].position.y + obstacleData["body-data"].dimensions.height / 2) {
+              relativePositionState.y = "middle";
+            } else if(playerCoordinates.y > obstacleData["body-data"].position.y + obstacleData["body-data"].dimensions.height / 2) {
+              relativePositionState.y = "bottom";
+            }
+  
+            switch(relativePositionState.x) {
+              case "left": 
+              switch(relativePositionState.y) {
+                case "top": 
+                  points.point1 = {
+                    x: -5 + obstacleData["body-data"].dimensions.width / 2,
+                    y: 5 + -obstacleData["body-data"].dimensions.height / 2
+                  };
+                  points.point2 = {
+                    x: 5 + -obstacleData["body-data"].dimensions.width / 2,
+                    y: -5 + obstacleData["body-data"].dimensions.height / 2
+                  };
+                break;
+                case "middle": 
+                  points.point1 = {
+                    x: 5 + -obstacleData["body-data"].dimensions.width / 2,
+                    y: 5 + -obstacleData["body-data"].dimensions.height / 2
+                  };
+                  points.point2 = {
+                    x: 5 + -obstacleData["body-data"].dimensions.width / 2,
+                    y: -5 + obstacleData["body-data"].dimensions.height / 2
+                  };
+                break;
+                case "bottom": 
+                  points.point1 = {
+                    x: 5 + -obstacleData["body-data"].dimensions.width / 2,
+                    y: 5 + -obstacleData["body-data"].dimensions.height / 2
+                  };
+                  points.point2 = {
+                    x: -5 + obstacleData["body-data"].dimensions.width / 2,
+                    y: -5 + obstacleData["body-data"].dimensions.height / 2
+                  };
+                break;
+              }
+              break;
+              case "middle": 
+                switch(relativePositionState.y) {
+                  case "top": 
+                    points.point1 = {
+                      x: 5 + -obstacleData["body-data"].dimensions.width / 2,
+                      y: 5 + -obstacleData["body-data"].dimensions.height / 2
+                    };
+                    points.point2 = {
+                      x: -5 + obstacleData["body-data"].dimensions.width / 2,
+                      y: 5 + -obstacleData["body-data"].dimensions.height / 2
+                    };
+                  break;
+                  case "middle": 
+                    points.point1 = {
+                      x: "inside",
+                      y: "inside"
+                    };
+                    points.point2 = {
+                      x: "inside",
+                      y: "inside"
+                    };
+                  break;
+                  case "bottom": 
+                    points.point1 = {
+                      x: 5 + -obstacleData["body-data"].dimensions.width / 2,
+                      y: -5 + obstacleData["body-data"].dimensions.height / 2
+                    };
+                    points.point2 = {
+                      x: -5 + obstacleData["body-data"].dimensions.width / 2,
+                      y: -5 + obstacleData["body-data"].dimensions.height / 2
+                    };
+                  break;
+                }
+              break;
+              case "right": 
+                switch(relativePositionState.y) {
+                  case "top": 
+                    points.point1 = {
+                      x: -5 + obstacleData["body-data"].dimensions.width / 2,
+                      y: -5 + obstacleData["body-data"].dimensions.height / 2
+                    };
+                    points.point2 = {
+                      x: 5 + -obstacleData["body-data"].dimensions.width / 2,
+                      y: 5 + -obstacleData["body-data"].dimensions.height / 2
+                    };
+                  break;
+                  case "middle": 
+                    points.point1 = {
+                      x: -5 + obstacleData["body-data"].dimensions.width / 2,
+                      y: 5 + -obstacleData["body-data"].dimensions.height / 2
+                    };
+                    points.point2 = {
+                      x: -5 + obstacleData["body-data"].dimensions.width / 2,
+                      y: -5 + obstacleData["body-data"].dimensions.height / 2
+                    };
+                  break;
+                  case "bottom": 
+                    points.point1 = {
+                      x: -5 + obstacleData["body-data"].dimensions.width / 2,
+                      y: 5 + -obstacleData["body-data"].dimensions.height / 2
+                    };
+                    points.point2 = {
+                      x: 5 + -obstacleData["body-data"].dimensions.width / 2,
+                      y: -5 + obstacleData["body-data"].dimensions.height / 2
+                    };
+                  break;
+                }
+              break;
+            }
+  
+            playerBuffer.erase();
+            playerBuffer.push();
+            playerBuffer.translate(obstacleData["body-data"].position.x - (gameData.players[permanentID].state.previousPosition.x + gameData.players[permanentID].state.force.x * (tickDelay / gameData.lastTickDelay)) + playerBuffer.width / 2, obstacleData["body-data"].position.y - (gameData.players[permanentID].state.previousPosition.y + gameData.players[permanentID].state.force.y * (tickDelay / gameData.lastTickDelay)) + playerBuffer.height / 2);
+            playerBuffer.beginShape();
+            playerBuffer.vertex(points.point1.x, points.point1.y);
+            playerBuffer.vertex(points.point1.x - (cos(-atan2((obstacleData["body-data"].position.x + points.point1.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + points.point1.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (500000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)), points.point1.y - (sin(-atan2((obstacleData["body-data"].position.x + points.point1.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + points.point1.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (500000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)));
+            playerBuffer.vertex(points.point2.x - (cos(-atan2((obstacleData["body-data"].position.x + points.point2.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + points.point2.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (500000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)), points.point2.y - (sin(-atan2((obstacleData["body-data"].position.x + points.point2.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + points.point2.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (500000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)));
+            playerBuffer.vertex(points.point2.x, points.point2.y);
+            playerBuffer.endShape();
+            playerBuffer.pop();
+            playerBuffer.noErase();
+  
+            shadowBuffer.push();
+            shadowBuffer.translate(obstacleData["body-data"].position.x - (gameData.players[permanentID].state.previousPosition.x + gameData.players[permanentID].state.force.x * (tickDelay / gameData.lastTickDelay)) + shadowBuffer.width / 2, obstacleData["body-data"].position.y - (gameData.players[permanentID].state.previousPosition.y + gameData.players[permanentID].state.force.y * (tickDelay / gameData.lastTickDelay)) + shadowBuffer.height / 2);
+            shadowBuffer.translate(0, 0, 0.15);
+            shadowBuffer.fill("#ffffff");
+            shadowBuffer.beginShape();
+            shadowBuffer.vertex(points.point1.x, points.point1.y);
+            shadowBuffer.vertex(points.point1.x - (cos(-atan2((obstacleData["body-data"].position.x + points.point1.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + points.point1.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (500000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)), points.point1.y - (sin(-atan2((obstacleData["body-data"].position.x + points.point1.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + points.point1.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (500000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)));
+            shadowBuffer.vertex(points.point2.x - (cos(-atan2((obstacleData["body-data"].position.x + points.point2.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + points.point2.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (500000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)), points.point2.y - (sin(-atan2((obstacleData["body-data"].position.x + points.point2.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + points.point2.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (500000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)));
+            shadowBuffer.vertex(points.point2.x, points.point2.y);
+            shadowBuffer.endShape();
+            shadowBuffer.pop();
+          } else {
+            let objectToPlayerData = {
+              distance: Math.sqrt(squaredDist(obstacleData["body-data"].position, playerCoordinates)),
+              angle: atan2(obstacleData["body-data"].position.y - playerCoordinates.y, obstacleData["body-data"].position.x - playerCoordinates.x),
+              objectAngle: obstacleData["body-data"].options.angle * 180 / Math.PI
+            },
+            newRotatedPlayerCoordinates = {
+              x: (cos(objectToPlayerData.angle + -objectToPlayerData.objectAngle) * objectToPlayerData.distance) + obstacleData["body-data"].position.x,
+              y: (sin(objectToPlayerData.angle + -objectToPlayerData.objectAngle) * objectToPlayerData.distance) + obstacleData["body-data"].position.y,
+            };
+            if(newRotatedPlayerCoordinates.x < obstacleData["body-data"].position.x - obstacleData["body-data"].dimensions.width / 2) {
+              relativePositionState.x = "left";
+            } else if(newRotatedPlayerCoordinates.x >= obstacleData["body-data"].position.x - obstacleData["body-data"].dimensions.width / 2 && newRotatedPlayerCoordinates.x <= obstacleData["body-data"].position.x + obstacleData["body-data"].dimensions.width / 2) {
+              relativePositionState.x = "middle";
+            } else if(newRotatedPlayerCoordinates.x > obstacleData["body-data"].position.x + obstacleData["body-data"].dimensions.width / 2) {
+              relativePositionState.x = "right";
+            }
+  
+            if(newRotatedPlayerCoordinates.y < obstacleData["body-data"].position.y - obstacleData["body-data"].dimensions.height / 2) {
+              relativePositionState.y = "top";
+            } else if(newRotatedPlayerCoordinates.y >= obstacleData["body-data"].position.y - obstacleData["body-data"].dimensions.height / 2 && newRotatedPlayerCoordinates.y <= obstacleData["body-data"].position.y + obstacleData["body-data"].dimensions.height / 2) {
+              relativePositionState.y = "middle";
+            } else if(newRotatedPlayerCoordinates.y > obstacleData["body-data"].position.y + obstacleData["body-data"].dimensions.height / 2) {
+              relativePositionState.y = "bottom";
+            }
+  
+            switch(relativePositionState.x) {
+              case "left": 
+              switch(relativePositionState.y) {
+                case "top": 
+                  points.point1 = {
+                    x: -5 + obstacleData["body-data"].dimensions.width / 2,
+                    y: 5 + -obstacleData["body-data"].dimensions.height / 2
+                  };
+                  points.point2 = {
+                    x: 5 + -obstacleData["body-data"].dimensions.width / 2,
+                    y: -5 + obstacleData["body-data"].dimensions.height / 2
+                  };
+                break;
+                case "middle": 
+                  points.point1 = {
+                    x: 5 + -obstacleData["body-data"].dimensions.width / 2,
+                    y: 5 + -obstacleData["body-data"].dimensions.height / 2
+                  };
+                  points.point2 = {
+                    x: 5 + -obstacleData["body-data"].dimensions.width / 2,
+                    y: -5 + obstacleData["body-data"].dimensions.height / 2
+                  };
+                break;
+                case "bottom": 
+                  points.point1 = {
+                    x: 5 + -obstacleData["body-data"].dimensions.width / 2,
+                    y: 5 + -obstacleData["body-data"].dimensions.height / 2
+                  };
+                  points.point2 = {
+                    x: -5 + obstacleData["body-data"].dimensions.width / 2,
+                    y: -5 + obstacleData["body-data"].dimensions.height / 2
+                  };
+                break;
+              }
+              break;
+              case "middle": 
+                switch(relativePositionState.y) {
+                  case "top": 
+                    points.point1 = {
+                      x: 5 + -obstacleData["body-data"].dimensions.width / 2,
+                      y: 5 + -obstacleData["body-data"].dimensions.height / 2
+                    };
+                    points.point2 = {
+                      x: -5 + obstacleData["body-data"].dimensions.width / 2,
+                      y: 5 + -obstacleData["body-data"].dimensions.height / 2
+                    };
+                  break;
+                  case "middle": 
+                    points.point1 = {
+                      x: 5 + -obstacleData["body-data"].dimensions.width / 2,
+                      y: -5 + obstacleData["body-data"].dimensions.height / 2
+                    };
+                    points.point2 = {
+                      x: -5 + obstacleData["body-data"].dimensions.width / 2,
+                      y: -5 + obstacleData["body-data"].dimensions.height / 2
+                    };
+                  break;
+                  case "bottom": 
+                    points.point1 = {
+                      x: 5 + -obstacleData["body-data"].dimensions.width / 2,
+                      y: -5 + obstacleData["body-data"].dimensions.height / 2
+                    };
+                    points.point2 = {
+                      x: -5 + obstacleData["body-data"].dimensions.width / 2,
+                      y: -5 + obstacleData["body-data"].dimensions.height / 2
+                    };
+                  break;
+                }
+              break;
+              case "right": 
+                switch(relativePositionState.y) {
+                  case "top": 
+                    points.point1 = {
+                      x: -5 + obstacleData["body-data"].dimensions.width / 2,
+                      y: -5 + obstacleData["body-data"].dimensions.height / 2
+                    };
+                    points.point2 = {
+                      x: 5 + -obstacleData["body-data"].dimensions.width / 2,
+                      y: 5 + -obstacleData["body-data"].dimensions.height / 2
+                    };
+                  break;
+                  case "middle": 
+                    points.point1 = {
+                      x: -5 + obstacleData["body-data"].dimensions.width / 2,
+                      y: 5 + -obstacleData["body-data"].dimensions.height / 2
+                    };
+                    points.point2 = {
+                      x: -5 + obstacleData["body-data"].dimensions.width / 2,
+                      y: -5 + obstacleData["body-data"].dimensions.height / 2
+                    };
+                  break;
+                  case "bottom": 
+                    points.point1 = {
+                      x: -5 + obstacleData["body-data"].dimensions.width / 2,
+                      y: 5 + -obstacleData["body-data"].dimensions.height / 2
+                    };
+                    points.point2 = {
+                      x: 5 + -obstacleData["body-data"].dimensions.width / 2,
+                      y: -5 + obstacleData["body-data"].dimensions.height / 2
+                    };
+                  break;
+                }
+              break;
+            }
+            const radius = (Math.sqrt(obstacleData["body-data"].dimensions.width ** 2 + obstacleData["body-data"].dimensions.height ** 2) / 2) - 5,
+            pointAngles = {
+              point1: atan2(-points.point1.y, -points.point1.x),
+              point2: atan2(-points.point2.y, -points.point2.x)
+            };
+            points.point1 = {
+              x: cos(pointAngles.point1 + objectToPlayerData.objectAngle) * radius,
+              y: sin(pointAngles.point1 + objectToPlayerData.objectAngle) * radius
+            };
+            points.point2 = {
+              x: cos(pointAngles.point2 + objectToPlayerData.objectAngle) * radius,
+              y: sin(pointAngles.point2 + objectToPlayerData.objectAngle) * radius
+            };
+  
+            playerBuffer.erase();
+            playerBuffer.push();
+            playerBuffer.translate(obstacleData["body-data"].position.x - (gameData.players[permanentID].state.previousPosition.x + gameData.players[permanentID].state.force.x * (tickDelay / gameData.lastTickDelay)) + playerBuffer.width / 2, obstacleData["body-data"].position.y - (gameData.players[permanentID].state.previousPosition.y + gameData.players[permanentID].state.force.y * (tickDelay / gameData.lastTickDelay)) + playerBuffer.height / 2);
+            playerBuffer.beginShape();
+            playerBuffer.vertex(points.point1.x, points.point1.y);
+            playerBuffer.vertex(points.point1.x - (cos(-atan2((obstacleData["body-data"].position.x + points.point1.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + points.point1.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (500000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)), points.point1.y - (sin(-atan2((obstacleData["body-data"].position.x + points.point1.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + points.point1.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (500000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)));
+            playerBuffer.vertex(points.point2.x - (cos(-atan2((obstacleData["body-data"].position.x + points.point2.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + points.point2.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (500000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)), points.point2.y - (sin(-atan2((obstacleData["body-data"].position.x + points.point2.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + points.point2.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (500000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)));
+            playerBuffer.vertex(points.point2.x, points.point2.y);
+            playerBuffer.endShape();
+            playerBuffer.pop();
+            playerBuffer.noErase();
+  
+            shadowBuffer.push();
+            shadowBuffer.translate(obstacleData["body-data"].position.x - (gameData.players[permanentID].state.previousPosition.x + gameData.players[permanentID].state.force.x * (tickDelay / gameData.lastTickDelay)) + shadowBuffer.width / 2, obstacleData["body-data"].position.y - (gameData.players[permanentID].state.previousPosition.y + gameData.players[permanentID].state.force.y * (tickDelay / gameData.lastTickDelay)) + shadowBuffer.height / 2);
+            shadowBuffer.translate(0, 0, 0.15);
+            shadowBuffer.fill("#ffffff");
+            shadowBuffer.beginShape();
+            shadowBuffer.vertex(points.point1.x, points.point1.y);
+            shadowBuffer.vertex(points.point1.x - (cos(-atan2((obstacleData["body-data"].position.x + points.point1.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + points.point1.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (500000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)), points.point1.y - (sin(-atan2((obstacleData["body-data"].position.x + points.point1.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + points.point1.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (500000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)));
+            shadowBuffer.vertex(points.point2.x - (cos(-atan2((obstacleData["body-data"].position.x + points.point2.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + points.point2.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (500000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)), points.point2.y - (sin(-atan2((obstacleData["body-data"].position.x + points.point2.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + points.point2.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (500000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)));
+            shadowBuffer.vertex(points.point2.x, points.point2.y);
+            shadowBuffer.endShape();
+            shadowBuffer.pop();
+          }
+          break;
+        case "circle":
+          // solves ssa triangle to determine what portion of the circle is visible
+          let playerObjectDistance = Math.sqrt(squaredDist({x: (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), y: (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))}, obstacleData["body-data"].position)),
+          radius = obstacleData["body-data"].radius,
+          secondAngle = asin((radius * sin(90)) / playerObjectDistance),
+          finalAngle = 90 - secondAngle,
+          negativeCoordinate = {x: cos(playerObjectAngle - finalAngle + 180) * radius, y: sin(playerObjectAngle - finalAngle + 180) * radius},
+          positiveCoordinate = {x: cos(playerObjectAngle + finalAngle + 180) * radius, y: sin(playerObjectAngle + finalAngle + 180) * radius};
+  
+          playerBuffer.erase();
+          playerBuffer.push();
+          playerBuffer.translate(obstacleData["body-data"].position.x - (gameData.players[permanentID].state.previousPosition.x + gameData.players[permanentID].state.force.x * (tickDelay / gameData.lastTickDelay)) + playerBuffer.width / 2, obstacleData["body-data"].position.y - (gameData.players[permanentID].state.previousPosition.y + gameData.players[permanentID].state.force.y * (tickDelay / gameData.lastTickDelay)) + playerBuffer.height / 2);
+          playerBuffer.beginShape();
+          playerBuffer.vertex(positiveCoordinate.x, positiveCoordinate.y);
+          playerBuffer.vertex(positiveCoordinate.x - (cos(-atan2((obstacleData["body-data"].position.x + positiveCoordinate.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + positiveCoordinate.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (5000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)), positiveCoordinate.y - (sin(-atan2((obstacleData["body-data"].position.x + positiveCoordinate.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + positiveCoordinate.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (5000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)));
+          playerBuffer.vertex(negativeCoordinate.x - (cos(-atan2((obstacleData["body-data"].position.x + negativeCoordinate.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + negativeCoordinate.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (5000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)), negativeCoordinate.y - (sin(-atan2((obstacleData["body-data"].position.x + negativeCoordinate.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + negativeCoordinate.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (5000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)));
+          playerBuffer.vertex(negativeCoordinate.x, negativeCoordinate.y);
+          playerBuffer.endShape();
+          playerBuffer.pop();
+          playerBuffer.noErase();
             
-      shadowBuffer.push();
-      shadowBuffer.translate(obstacleData["body-data"].position.x - (gameData.players[permanentID].state.previousPosition.x + gameData.players[permanentID].state.force.x * (tickDelay / gameData.lastTickDelay)) + shadowBuffer.width / 2, obstacleData["body-data"].position.y - (gameData.players[permanentID].state.previousPosition.y + gameData.players[permanentID].state.force.y * (tickDelay / gameData.lastTickDelay)) + shadowBuffer.height / 2);
-      shadowBuffer.fill("#ffffff");
-      shadowBuffer.translate(0, 0, 0.15);
-      shadowBuffer.beginShape();
-      shadowBuffer.vertex(positiveCoordinate.x, positiveCoordinate.y);
-      shadowBuffer.vertex(positiveCoordinate.x - (cos(-atan2((obstacleData["body-data"].position.x + positiveCoordinate.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + positiveCoordinate.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (5000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)), positiveCoordinate.y - (sin(-atan2((obstacleData["body-data"].position.x + positiveCoordinate.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + positiveCoordinate.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (5000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)));
-      shadowBuffer.vertex(negativeCoordinate.x - (cos(-atan2((obstacleData["body-data"].position.x + negativeCoordinate.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + negativeCoordinate.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (5000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)), negativeCoordinate.y - (sin(-atan2((obstacleData["body-data"].position.x + negativeCoordinate.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + negativeCoordinate.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (5000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)));
-      shadowBuffer.vertex(negativeCoordinate.x, negativeCoordinate.y);
-      shadowBuffer.endShape();
-      shadowBuffer.ellipse(0, 0, radius * 2);
-      shadowBuffer.pop();
+          shadowBuffer.push();
+          shadowBuffer.translate(obstacleData["body-data"].position.x - (gameData.players[permanentID].state.previousPosition.x + gameData.players[permanentID].state.force.x * (tickDelay / gameData.lastTickDelay)) + shadowBuffer.width / 2, obstacleData["body-data"].position.y - (gameData.players[permanentID].state.previousPosition.y + gameData.players[permanentID].state.force.y * (tickDelay / gameData.lastTickDelay)) + shadowBuffer.height / 2);
+          shadowBuffer.fill("#ffffff");
+          shadowBuffer.translate(0, 0, 0.15);
+          shadowBuffer.beginShape();
+          shadowBuffer.vertex(positiveCoordinate.x, positiveCoordinate.y);
+          shadowBuffer.vertex(positiveCoordinate.x - (cos(-atan2((obstacleData["body-data"].position.x + positiveCoordinate.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + positiveCoordinate.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (5000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)), positiveCoordinate.y - (sin(-atan2((obstacleData["body-data"].position.x + positiveCoordinate.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + positiveCoordinate.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (5000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)));
+          shadowBuffer.vertex(negativeCoordinate.x - (cos(-atan2((obstacleData["body-data"].position.x + negativeCoordinate.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + negativeCoordinate.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (5000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)), negativeCoordinate.y - (sin(-atan2((obstacleData["body-data"].position.x + negativeCoordinate.x) - (playerData.state.previousPosition.x + playerData.state.force.x * (tickDelay / gameData.lastTickDelay)), (obstacleData["body-data"].position.y + negativeCoordinate.y) - (playerData.state.previousPosition.y + playerData.state.force.y * (tickDelay / gameData.lastTickDelay))) - 90) * (5000 + gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view * 30)));
+          shadowBuffer.vertex(negativeCoordinate.x, negativeCoordinate.y);
+          shadowBuffer.endShape();
+          shadowBuffer.pop();
+          break;
+      }
     }
   }
 }
@@ -1086,11 +1134,13 @@ function displayWorld() {
   if (assetsAreLoaded) {
     rectMode(CENTER);
     syncedMS = Date.now() - gameData.timeStamp;
+    clientData.isBlind = false;
     interpolateCamera();
     cameraLocation = queuedCameraLocation;
     camera(cameraLocation.x, cameraLocation.y, cameraLocation.z + sin(frameCount * 1.5) * 10, cameraLocation.targetX, cameraLocation.targetY, cameraLocation.targetZ);
     background(gameData.mapData.config["background-colour"]);
     fill(gameData.mapData.config["ground-colour"]);
+    strokeWeight(0);
     rect(gameData.mapData.config["map-dimensions"].width / 2, gameData.mapData.config["map-dimensions"].height / 2, gameData.mapData.config["map-dimensions"].width, gameData.mapData.config["map-dimensions"].height);
     if(clientData.options.detailedGround) image(assetsLoaded[gameData.mapData.config["ground-image"]], gameData.mapData.config["map-dimensions"].width / 2, gameData.mapData.config["map-dimensions"].height / 2, gameData.mapData.config["map-dimensions"].width, gameData.mapData.config["map-dimensions"].height);
     if(gameData.mapData.config.gamemode == "hardpoint") {
@@ -1098,20 +1148,23 @@ function displayWorld() {
     }
     shadowBuffer.clear();
     playerBuffer.clear();
+    displayObstacles("nonShootables");
     displayBullets();
-    displayParticles();
-    displayGrenades();
     displayGuns();
     displayPlayers(); 
+    displayGrenades();
+    displayParticles();
     displayFog();
-    image(playerBuffer, (gameData.players[permanentID].state.previousPosition.x + gameData.players[permanentID].state.force.x * (syncedMS / gameData.lastTickDelay)), (gameData.players[permanentID].state.previousPosition.y + gameData.players[permanentID].state.force.y * (syncedMS / gameData.lastTickDelay)), playerBuffer.width, playerBuffer.height);
+    if(!clientData.isBlind) {
+      image(playerBuffer, (gameData.players[permanentID].state.previousPosition.x + gameData.players[permanentID].state.force.x * (syncedMS / gameData.lastTickDelay)), (gameData.players[permanentID].state.previousPosition.y + gameData.players[permanentID].state.force.y * (syncedMS / gameData.lastTickDelay)), playerBuffer.width, playerBuffer.height);
+    }
     tint(clientData.options.shadowColour);
     image(shadowBuffer, (gameData.players[permanentID].state.previousPosition.x + gameData.players[permanentID].state.force.x * (syncedMS / gameData.lastTickDelay)), (gameData.players[permanentID].state.previousPosition.y + gameData.players[permanentID].state.force.y * (syncedMS / gameData.lastTickDelay)), shadowBuffer.width, shadowBuffer.height);
     tint("#ffffff");    
     fill(clientData.options.shadowColour);
     rect((gameData.players[permanentID].state.previousPosition.x + gameData.players[permanentID].state.force.x * (syncedMS / gameData.lastTickDelay)) - shadowBuffer.width / 2 - 2500, (gameData.players[permanentID].state.previousPosition.y + gameData.players[permanentID].state.force.y * (syncedMS / gameData.lastTickDelay)), 5000, shadowBuffer.height);
     rect((gameData.players[permanentID].state.previousPosition.x + gameData.players[permanentID].state.force.x * (syncedMS / gameData.lastTickDelay)) + shadowBuffer.width / 2 + 2500, (gameData.players[permanentID].state.previousPosition.y + gameData.players[permanentID].state.force.y * (syncedMS / gameData.lastTickDelay)), 5000, shadowBuffer.height);
-    displayObstacles();
+    displayObstacles("basic");
     displayExplosionParticles();
     if(Math.round((queuedCameraLocation.z / 4)) * 4 != Math.round((gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view + 2000 / 4)) * 4) {
       queuedCameraLocation.z += Math.round((gameData.weapons[gameData.players[permanentID].guns[gameData.players[permanentID].state.activeWeaponIndex]].view + 2000 - queuedCameraLocation.z) / 6);
